@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Promptify</title>
+</head>
+<body>
+
+<h1>Promptify</h1>
+
+<input id="url" placeholder="YouTube URL">
+<button onclick="analyze()">Analyze</button>
+
+<pre id="result"></pre>
+
+<script>
+async function analyze(){
+
+const url = document.getElementById("url").value
+
+const res = await fetch(
+`http://127.0.0.1:8000/analyze?url=${encodeURIComponent(url)}`
+)
+
+const data = await res.json()
+
+document.getElementById("result").textContent =
+"BPM: " + data.bpm + "\n" +
+"Key: " + data.key + "\n\n" +
+data.prompt
+
+}
+</script>
+
+</body>
+</html>
