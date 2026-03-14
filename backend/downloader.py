@@ -34,7 +34,7 @@ def download_audio(url: str):
     "quiet": False,
     "extractor_args": {
         "youtube": {
-            "player_client": ["android"],
+            "player_client": ["ios", "web"],
             }
         },
     }
