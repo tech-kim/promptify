@@ -31,7 +31,7 @@ def download_audio(url: str):
     cookies_file = get_cookies_file()
 
     ydl_opts = {
-        "format": "bestaudio/best",
+        "format": "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio/best",
         "outtmpl": webm_path,
         "quiet": False,
     }
