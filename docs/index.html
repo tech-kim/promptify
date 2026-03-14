@@ -3,716 +3,316 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Promptify — AI Music Analyzer</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>Promptify</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #080810;
-    --surface: #0f0f1a;
-    --surface2: #16162a;
-    --border: rgba(255,255,255,0.08);
-    --accent: #7c6af7;
-    --accent2: #f76ab8;
-    --accent3: #6af7d4;
-    --text: #e8e8f0;
-    --muted: #6b6b8a;
-    --mono: 'Space Mono', monospace;
-    --sans: 'Noto Sans KR', sans-serif;
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --accent: #7c3aed;
+    --accent2: #ec4899;
+    --text: #e2e8f0;
+    --muted: #64748b;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: var(--sans);
+    font-family: 'Noto Sans KR', sans-serif;
     min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Animated background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,106,247,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(247,106,184,0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 40% 60% at 50% 50%, rgba(106,247,212,0.04) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 0 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* HEADER */
-  header {
-    padding: 48px 0 32px;
-    text-align: center;
-  }
-
-  .logo {
-    font-family: var(--mono);
-    font-size: 13px;
-    letter-spacing: 0.3em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    opacity: 0.9;
-  }
-
-  .headline {
-    font-family: var(--mono);
-    font-size: clamp(28px, 5vw, 48px);
-    font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: #fff;
-    margin-bottom: 12px;
-  }
-
-  .headline span {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .subline {
-    font-size: 15px;
-    color: var(--muted);
-    font-weight: 300;
-    letter-spacing: 0.02em;
-  }
-
-  /* WAVEFORM DECORATION */
-  .waveform {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 3px;
-    height: 28px;
-    margin: 20px 0;
-    opacity: 0.35;
+    padding: 40px 20px;
   }
-
-  .waveform span {
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(36px, 8vw, 64px);
+    font-weight: 700;
+    letter-spacing: -2px;
+  }
+  h1 span { color: var(--accent2); }
+  .subtitle {
+    color: var(--muted);
+    margin-top: 12px;
+    font-size: 15px;
+  }
+  .wave {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    margin: 24px 0;
+  }
+  .wave span {
     display: block;
     width: 3px;
-    background: var(--accent);
-    border-radius: 99px;
+    background: linear-gradient(var(--accent), var(--accent2));
+    border-radius: 2px;
     animation: wave 1.2s ease-in-out infinite;
   }
-
-  .waveform span:nth-child(1)  { height: 8px;  animation-delay: 0s;    }
-  .waveform span:nth-child(2)  { height: 18px; animation-delay: 0.1s;  }
-  .waveform span:nth-child(3)  { height: 12px; animation-delay: 0.2s;  }
-  .waveform span:nth-child(4)  { height: 24px; animation-delay: 0.3s;  }
-  .waveform span:nth-child(5)  { height: 16px; animation-delay: 0.4s;  }
-  .waveform span:nth-child(6)  { height: 28px; animation-delay: 0.5s;  background: var(--accent2); }
-  .waveform span:nth-child(7)  { height: 20px; animation-delay: 0.6s;  }
-  .waveform span:nth-child(8)  { height: 14px; animation-delay: 0.7s;  }
-  .waveform span:nth-child(9)  { height: 22px; animation-delay: 0.8s;  background: var(--accent3); }
-  .waveform span:nth-child(10) { height: 10px; animation-delay: 0.9s;  }
-  .waveform span:nth-child(11) { height: 18px; animation-delay: 1.0s;  }
-  .waveform span:nth-child(12) { height: 6px;  animation-delay: 1.1s;  }
-
+  .wave span:nth-child(1){height:20px;animation-delay:0s}
+  .wave span:nth-child(2){height:35px;animation-delay:0.1s}
+  .wave span:nth-child(3){height:25px;animation-delay:0.2s}
+  .wave span:nth-child(4){height:40px;animation-delay:0.3s}
+  .wave span:nth-child(5){height:30px;animation-delay:0.4s}
+  .wave span:nth-child(6){height:45px;animation-delay:0.5s}
+  .wave span:nth-child(7){height:28px;animation-delay:0.4s}
+  .wave span:nth-child(8){height:38px;animation-delay:0.3s}
+  .wave span:nth-child(9){height:22px;animation-delay:0.2s}
+  .wave span:nth-child(10){height:32px;animation-delay:0.1s}
+  .wave span:nth-child(11){height:18px;animation-delay:0s}
   @keyframes wave {
-    0%, 100% { transform: scaleY(1); }
-    50% { transform: scaleY(0.4); }
+    0%,100%{transform:scaleY(1)}
+    50%{transform:scaleY(0.4)}
   }
-
-  /* INPUT SECTION */
-  .input-card {
+  .card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 28px;
+    padding: 32px;
+    width: 100%;
+    max-width: 680px;
   }
-
+  .input-group {
+    margin-bottom: 16px;
+  }
   .input-label {
-    font-family: var(--mono);
+    font-family: 'Space Mono', monospace;
     font-size: 11px;
-    letter-spacing: 0.15em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
     display: block;
   }
-
-  .url-row {
-    display: flex;
-    gap: 10px;
-  }
-
-  .url-input {
-    flex: 1;
+  input {
+    width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    font-family: var(--mono);
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 14px 16px;
     color: var(--text);
+    font-size: 15px;
+    font-family: 'Noto Sans KR', sans-serif;
     outline: none;
     transition: border-color 0.2s;
   }
-
-  .url-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(124,106,247,0.15);
-  }
-
-  .url-input::placeholder { color: var(--muted); }
-
-  .analyze-btn {
-    background: linear-gradient(135deg, var(--accent), #9b5de5);
-    border: none;
-    border-radius: 10px;
-    padding: 14px 24px;
-    color: #fff;
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-    white-space: nowrap;
-  }
-
-  .analyze-btn:hover { opacity: 0.88; }
-  .analyze-btn:active { transform: scale(0.97); }
-  .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* LOADING */
-  #loading {
-    display: none;
-    text-align: center;
-    padding: 48px;
-  }
-
-  .spinner {
-    width: 48px;
-    height: 48px;
-    border: 3px solid rgba(124,106,247,0.2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loading-steps {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .loading-step {
-    opacity: 0;
-    transform: translateY(4px);
-    transition: all 0.4s;
-  }
-
-  .loading-step.active {
-    opacity: 1;
-    color: var(--accent3);
-    transform: none;
-  }
-
-  .loading-step.done {
-    opacity: 0.5;
-    color: var(--muted);
-  }
-
-  /* RESULTS */
-  #results { display: none; }
-
-  .song-header {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px 28px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .song-icon {
-    width: 52px;
-    height: 52px;
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+  .row { display: flex; gap: 12px; }
+  .row .input-group { flex: 1; }
+  button {
+    width: 100%;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-  }
-
-  .song-meta h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 4px;
-  }
-
-  .song-meta p {
-    font-size: 13px;
-    color: var(--muted);
-    font-family: var(--mono);
-  }
-
-  .stats-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-  }
-
-  .stat-badge {
-    background: var(--surface2);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: 8px;
-    padding: 6px 14px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--accent3);
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    padding: 16px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    letter-spacing: 1px;
+    margin-top: 8px;
+    transition: opacity 0.2s;
   }
-
-  .stat-badge .label {
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: #f87171;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+  .loading {
+    text-align: center;
+    padding: 24px;
     color: var(--muted);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-size: 14px;
+    margin-top: 16px;
   }
-
-  /* TABS */
+  .result { margin-top: 24px; }
   .tabs {
     display: flex;
-    gap: 4px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 6px;
+    gap: 8px;
     margin-bottom: 16px;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
-
-  .tab-btn {
-    flex-shrink: 0;
-    background: transparent;
-    border: none;
+  .tab {
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 8px 14px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.05em;
+    padding: 8px 16px;
     color: var(--muted);
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
-    white-space: nowrap;
   }
-
-  .tab-btn:hover { color: var(--text); }
-  .tab-btn.active {
+  .tab.active {
     background: var(--accent);
-    color: #fff;
+    border-color: var(--accent);
+    color: white;
   }
-
-  /* CONTENT PANELS */
-  .panel {
-    display: none;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .panel.active { display: block; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: none; }
-  }
-
-  /* MARKDOWN RENDERING */
-  .markdown h2 {
-    font-family: var(--mono);
-    font-size: 14px;
-    letter-spacing: 0.08em;
-    color: var(--accent);
-    margin-bottom: 14px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase;
-  }
-
-  .markdown p {
-    font-size: 14px;
-    line-height: 1.75;
-    color: #c8c8d8;
-    margin-bottom: 14px;
-  }
-
-  .markdown strong {
-    color: #fff;
-    font-weight: 600;
-  }
-
-  .markdown ol, .markdown ul {
-    padding-left: 20px;
-    margin-bottom: 14px;
-  }
-
-  .markdown li {
-    font-size: 14px;
-    line-height: 1.75;
-    color: #c8c8d8;
-    margin-bottom: 8px;
-  }
-
-  /* SUNO PROMPT PANEL */
-  .suno-box {
+  .content {
     background: var(--bg);
-    border: 1px solid var(--accent);
-    border-radius: 12px;
-    padding: 20px;
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    font-size: 14px;
     line-height: 1.8;
     white-space: pre-wrap;
-    word-break: break-word;
-    margin-bottom: 16px;
-    position: relative;
+    max-height: 500px;
+    overflow-y: auto;
   }
-
   .copy-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface2);
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 10px 18px;
-    font-family: var(--mono);
-    font-size: 12px;
+    padding: 10px 20px;
     color: var(--text);
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-left: auto;
-  }
-
-  .copy-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .copy-btn.copied {
-    border-color: var(--accent3);
-    color: var(--accent3);
-  }
-
-  .suno-tip {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.6;
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: rgba(106,247,212,0.04);
-    border: 1px solid rgba(106,247,212,0.12);
-    border-radius: 8px;
-  }
-
-  /* ERROR */
-  .error-box {
-    background: rgba(247,106,106,0.08);
-    border: 1px solid rgba(247,106,106,0.25);
-    border-radius: 12px;
-    padding: 16px 20px;
     font-size: 13px;
-    color: #f76a6a;
-    display: none;
+    cursor: pointer;
+    width: auto;
     margin-top: 12px;
+    transition: border-color 0.2s;
   }
-
-  /* FOOTER */
+  .copy-btn:hover { border-color: var(--accent); }
   footer {
-    text-align: center;
-    padding: 40px 0;
-    font-family: var(--mono);
-    font-size: 11px;
+    margin-top: 40px;
     color: var(--muted);
-    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
   }
-
   footer a { color: var(--accent); text-decoration: none; }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <div class="logo">✦ AI Music Intelligence</div>
-    <h1 class="headline">Prompt<span>ify</span></h1>
-    <p class="subline">YouTube 링크 하나로 곡을 분석하고 Suno AI 프롬프트를 생성합니다</p>
-    <div class="waveform">
-      <span></span><span></span><span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span><span></span><span></span>
-    </div>
-  </header>
-
-  <!-- Input -->
-  <div class="input-card">
-    <span class="input-label">🔗 YouTube URL 입력</span>
-    <div class="url-row">
-      <input type="text" id="urlInput" class="url-input"
-             placeholder="https://youtu.be/..." />
-      <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">
-        ▶ 분석
-      </button>
-    </div>
-    <div id="errorBox" class="error-box"></div>
+<div class="header">
+  <div class="tag">✦ AI MUSIC INTELLIGENCE</div>
+  <h1>Prompt<span>ify</span></h1>
+  <p class="subtitle">곡 정보를 입력하면 Suno AI 프롬프트를 생성합니다</p>
+  <div class="wave">
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span>
   </div>
-
-  <!-- Loading -->
-  <div id="loading">
-    <div class="spinner"></div>
-    <div class="loading-steps">
-      <div class="loading-step" id="step1">① YouTube 오디오 다운로드 중...</div>
-      <div class="loading-step" id="step2">② BPM · Key · Energy 분석 중...</div>
-      <div class="loading-step" id="step3">③ AI 분석 리포트 생성 중...</div>
-      <div class="loading-step" id="step4">④ Suno 프롬프트 작성 중...</div>
-    </div>
-  </div>
-
-  <!-- Results -->
-  <div id="results">
-    <div class="song-header">
-      <div class="song-icon">🎵</div>
-      <div class="song-meta">
-        <h2 id="songTitle">—</h2>
-        <p id="songArtist">—</p>
-        <div class="stats-row">
-          <div class="stat-badge">
-            <span class="label">BPM</span>
-            <span id="statBpm">—</span>
-          </div>
-          <div class="stat-badge">
-            <span class="label">Key</span>
-            <span id="statKey">—</span>
-          </div>
-          <div class="stat-badge">
-            <span class="label">Energy</span>
-            <span id="statEnergy">—</span>
-          </div>
-          <div class="stat-badge">
-            <span class="label">Genre</span>
-            <span id="statGenre">—</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab-btn active" onclick="showTab('report')">📄 전체 리포트</button>
-      <button class="tab-btn" onclick="showTab('suno')">🎛️ Suno 프롬프트</button>
-    </div>
-
-    <!-- Report Panel -->
-    <div class="panel active" id="panel-report">
-      <div class="markdown" id="reportContent"></div>
-    </div>
-
-    <!-- Suno Panel -->
-    <div class="panel" id="panel-suno">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;font-family:var(--mono)">
-        아래 프롬프트를 복사해서 Suno AI에 붙여넣으세요
-      </p>
-      <div class="suno-box" id="sunoPromptBox">—</div>
-      <div style="display:flex;justify-content:flex-end">
-        <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">
-          📋 프롬프트 복사
-        </button>
-      </div>
-      <div class="suno-tip">
-        💡 <strong>팁:</strong> Suno에서 "Custom mode"를 켜고 Style 칸에 붙여넣으면 이 곡의 스타일에 가까운 음악이 생성됩니다.
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    Promptify — <a href="https://github.com/tech-kim/promptify" target="_blank">GitHub</a> · Powered by Claude AI
-  </footer>
 </div>
 
+<div class="card">
+  <div class="input-group">
+    <label class="input-label">🎵 곡 제목</label>
+    <input type="text" id="titleInput" placeholder="예: MANIAC" />
+  </div>
+  <div class="row">
+    <div class="input-group">
+      <label class="input-label">🎤 아티스트</label>
+      <input type="text" id="artistInput" placeholder="예: VIVIZ" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">🎸 장르 (선택)</label>
+      <input type="text" id="genreInput" placeholder="예: K-Pop" />
+    </div>
+  </div>
+  <button id="analyzeBtn" onclick="analyze()">▶ 분석</button>
+
+  <div id="error" class="error" style="display:none"></div>
+  <div id="loading" class="loading" style="display:none">🎵 AI가 분석 중입니다...</div>
+
+  <div id="result" class="result" style="display:none">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('report')">📄 전체 리포트</div>
+      <div class="tab" onclick="switchTab('suno')">🎛️ Suno 프롬프트</div>
+    </div>
+    <div id="reportContent" class="content"></div>
+    <div id="sunoContent" class="content" style="display:none"></div>
+    <button class="copy-btn" onclick="copyPrompt()">📋 Suno 프롬프트 복사</button>
+  </div>
+</div>
+
+<footer>
+  Promptify — <a href="https://github.com/tech-kim/promptify" target="_blank">GitHub</a> · Powered by Claude AI
+</footer>
+
 <script>
-  // ====== CONFIG ======
-  // 로컬 개발: http://127.0.0.1:8000
-  // 배포 후: https://your-render-app.onrender.com
-  const API_BASE = "https://promptify-q3oh.onrender.com";
+const API_BASE = "https://promptify-q3oh.onrender.com";
+let sunoText = "";
 
-  // ====== ANALYZE ======
-  async function analyze() {
-    const url = document.getElementById("urlInput").value.trim();
-    if (!url) { showError("YouTube URL을 입력해주세요"); return; }
+async function analyze() {
+  const title = document.getElementById('titleInput').value.trim();
+  const artist = document.getElementById('artistInput').value.trim();
+  const genre = document.getElementById('genreInput').value.trim();
 
-    hideError();
-    showLoading();
-    hideResults();
-
-    const steps = [1, 2, 3, 4];
-    let stepIdx = 0;
-    const stepInterval = setInterval(() => {
-      if (stepIdx > 0) {
-        document.getElementById(`step${stepIdx}`).classList.remove("active");
-        document.getElementById(`step${stepIdx}`).classList.add("done");
-      }
-      stepIdx++;
-      if (stepIdx <= 4) {
-        document.getElementById(`step${stepIdx}`).classList.add("active");
-      } else {
-        clearInterval(stepInterval);
-      }
-    }, 3500);
-
-    try {
-      const res = await fetch(`${API_BASE}/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
-      });
-
-      clearInterval(stepInterval);
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "분석 실패");
-      }
-
-      const data = await res.json();
-      displayResults(data);
-
-    } catch (e) {
-      clearInterval(stepInterval);
-      hideLoading();
-      showError("분석 중 오류가 발생했습니다: " + e.message);
-    }
+  if (!title) {
+    showError("곡 제목을 입력해주세요.");
+    return;
   }
 
-  function displayResults(data) {
-    hideLoading();
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = true;
 
-    document.getElementById("songTitle").textContent = data.title || "Unknown";
-    document.getElementById("songArtist").textContent = data.artist || "";
-    document.getElementById("statBpm").textContent = data.features?.bpm || "—";
-    document.getElementById("statKey").textContent = data.features?.key || "—";
-    document.getElementById("statEnergy").textContent = data.features?.energy_label || "—";
-    document.getElementById("statGenre").textContent = data.features?.genre_guess || "—";
-
-    // 마크다운 렌더링 (간단 버전)
-    document.getElementById("reportContent").innerHTML = renderMarkdown(data.report || "");
-
-    // Suno 프롬프트
-    const sunoText = data.suno_prompt?.trim() || "(프롬프트 없음)";
-    document.getElementById("sunoPromptBox").textContent = sunoText;
-
-    showResults();
-  }
-
-  // 간단한 마크다운 → HTML 변환
-  function renderMarkdown(text) {
-    return text
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^(\d+)\. (.+)$/gm, '<li>$1. $2</li>')
-      .replace(/(<li>.*<\/li>\n?)+/gs, m => `<ol>${m}</ol>`)
-      .replace(/^(?!<[h|o|u|l]).+$/gm, m => m ? `<p>${m}</p>` : '')
-      .replace(/<\/p>\s*<p>/g, '</p><p>')
-      .replace(/\n/g, '');
-  }
-
-  // ====== TABS ======
-  function showTab(name) {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-    event.target.classList.add("active");
-    document.getElementById(`panel-${name}`).classList.add("active");
-  }
-
-  // ====== COPY ======
-  function copyPrompt() {
-    const text = document.getElementById("sunoPromptBox").textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById("copyBtn");
-      btn.classList.add("copied");
-      btn.textContent = "✓ 복사됨!";
-      setTimeout(() => {
-        btn.classList.remove("copied");
-        btn.innerHTML = "📋 프롬프트 복사";
-      }, 2000);
+  try {
+    const res = await fetch(`${API_BASE}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, artist, genre })
     });
-  }
 
-  // ====== UI helpers ======
-  function showLoading() {
-    document.getElementById("loading").style.display = "block";
-    document.getElementById("analyzeBtn").disabled = true;
-    document.querySelectorAll(".loading-step").forEach(s => {
-      s.classList.remove("active","done");
-    });
-  }
+    const data = await res.json();
 
-  function hideLoading() {
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("analyzeBtn").disabled = false;
-  }
+    if (!res.ok) throw new Error(data.detail || '분석 실패');
 
-  function showResults() {
-    document.getElementById("results").style.display = "block";
-    document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+    document.getElementById('reportContent').textContent = data.report;
+    sunoText = data.suno_prompt;
+    document.getElementById('sunoContent').textContent = sunoText;
+    document.getElementById('result').style.display = 'block';
 
-  function hideResults() {
-    document.getElementById("results").style.display = "none";
+  } catch (e) {
+    showError("분석 중 오류가 발생했습니다: " + e.message);
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
   }
+}
 
-  function showError(msg) {
-    const el = document.getElementById("errorBox");
-    el.textContent = "⚠ " + msg;
-    el.style.display = "block";
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = "⚠ " + msg;
+  el.style.display = 'block';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (tab === 'report') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('reportContent').style.display = 'block';
+    document.getElementById('sunoContent').style.display = 'none';
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('reportContent').style.display = 'none';
+    document.getElementById('sunoContent').style.display = 'block';
   }
+}
 
-  function hideError() {
-    document.getElementById("errorBox").style.display = "none";
-  }
-
-  // Enter key
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("urlInput").addEventListener("keydown", e => {
-      if (e.key === "Enter") analyze();
-    });
+function copyPrompt() {
+  navigator.clipboard.writeText(sunoText).then(() => {
+    alert('복사됐습니다!');
   });
+}
 </script>
-
 </body>
 </html>
