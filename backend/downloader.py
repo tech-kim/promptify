@@ -29,7 +29,7 @@ def download_audio(url: str):
     cookies_file = get_cookies_file()
 
     ydl_opts = {
-    "format": "140/251/250/249/bestaudio",
+    "format": "best",
     "outtmpl": os.path.join(OUTPUT_DIR, "audio.%(ext)s"),
     "quiet": False,
     "extractor_args": {"youtube": {"skip": ["dash", "hls"]}},
