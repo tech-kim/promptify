@@ -48,12 +48,25 @@ def generate_analysis(song_info: dict) -> dict:
 (상업적 가능성 분석)
 
 ## 🎛️ Suno AI 프롬프트
-Suno AI 스타일 프롬프트를 영어로 작성하세요. 
-- 코드블록(```) 없이 순수 텍스트만 작성
-- 장르, 분위기, 악기, 보컬 스타일, BPM, 구성 등을 포함
-- 반드시 정확히 1000자(영문 기준)에 맞게 작성
-- 1000자가 안 되면 세부 묘사를 추가해서 늘릴 것
-- 1000자가 넘으면 줄여서 맞출 것
+아래 규칙을 반드시 지켜서 Suno AI 프롬프트를 영어로 작성하세요:
+
+규칙:
+- 코드블록(```) 없이 순수 텍스트 한 단락만 작성
+- 반드시 950자(영문 공백 포함) 이내로 작성
+- 작성 후 Python으로 len()을 사용해 글자 수를 확인하고 950자 초과 시 줄일 것
+- 글자 수 확인 코드와 결과는 출력하지 말 것, 최종 프롬프트 텍스트만 출력
+
+구조 순서 (단락 안에서 이 순서로):
+1. Hook-in-5: 첫 5초 안에 귀를 사로잡는 구체적인 음악적 순간 묘사 (오프닝 리프, 비트 드롭, 보컬 브레스 등)
+2. Emotional overview: 전체적인 감성과 무드
+3. Instrumentation: 악기 구성
+4. Harmony: 화성 방향
+5. Vocal: 보컬 스타일
+6. Structure: 곡 구성
+7. Mix: 믹스 질감
+8. Avoid: 피해야 할 요소
+
+특정 아티스트나 멜로디를 직접 복사하지 말고 영향을 묘사로만 표현할 것
 """
 
     response = client.chat.completions.create(
@@ -68,8 +81,15 @@ Suno AI 스타일 프롬프트를 영어로 작성하세요.
     suno_prompt = ""
     if "🎛️ Suno AI 프롬프트" in report:
         raw = report.split("🎛️ Suno AI 프롬프트")[-1].strip()
-        # 코드블록 제거
         raw = raw.replace("```english", "").replace("```", "").strip()
+        # 950자 초과 시 마지막 문장 단위로 자르기
+        if len(raw) > 950:
+            truncated = raw[:950]
+            last_period = truncated.rfind(".")
+            if last_period > 0:
+                raw = truncated[:last_period + 1]
+            else:
+                raw = truncated
         suno_prompt = raw
 
     return {
