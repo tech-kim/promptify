@@ -1,0 +1,8 @@
+audio/
+__pycache__/
+*.pyc
+*.mp3
+*.webm
+*.wav
+.env
+.DS_Store
