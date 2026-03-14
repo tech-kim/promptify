@@ -48,7 +48,12 @@ def generate_analysis(song_info: dict) -> dict:
 (상업적 가능성 분석)
 
 ## 🎛️ Suno AI 프롬프트
-(Suno AI로 비슷한 곡을 만들기 위한 영어 프롬프트. 장르, 분위기, 악기, 보컬 스타일 등을 포함)
+Suno AI 스타일 프롬프트를 영어로 작성하세요. 
+- 코드블록(```) 없이 순수 텍스트만 작성
+- 장르, 분위기, 악기, 보컬 스타일, BPM, 구성 등을 포함
+- 반드시 정확히 1000자(영문 기준)에 맞게 작성
+- 1000자가 안 되면 세부 묘사를 추가해서 늘릴 것
+- 1000자가 넘으면 줄여서 맞출 것
 """
 
     response = client.chat.completions.create(
@@ -62,7 +67,10 @@ def generate_analysis(song_info: dict) -> dict:
 
     suno_prompt = ""
     if "🎛️ Suno AI 프롬프트" in report:
-        suno_prompt = report.split("🎛️ Suno AI 프롬프트")[-1].strip()
+        raw = report.split("🎛️ Suno AI 프롬프트")[-1].strip()
+        # 코드블록 제거
+        raw = raw.replace("```english", "").replace("```", "").strip()
+        suno_prompt = raw
 
     return {
         "report": report,
