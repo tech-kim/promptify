@@ -239,7 +239,10 @@
     </div>
     <div id="reportContent" class="content"></div>
     <div id="sunoContent" class="content" style="display:none"></div>
-    <button class="copy-btn" onclick="copyPrompt()">📋 Suno 프롬프트 복사</button>
+    <div style="display:flex; gap:8px; margin-top:12px;">
+  <button class="copy-btn" onclick="copyPrompt()" style="margin-top:0;">📋 Suno 프롬프트 복사</button>
+  <button class="copy-btn" onclick="openSuno()" style="margin-top:0;">🎵 Suno 열기</button>
+</div>
   </div>
 </div>
 
@@ -313,6 +316,9 @@ function copyPrompt() {
   navigator.clipboard.writeText(sunoText).then(() => {
     alert('복사됐습니다!');
   });
+}
+function openSuno() {
+  window.open("https://suno.com/create", "_blank");
 }
 </script>
 </body>
