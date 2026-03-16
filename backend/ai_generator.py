@@ -15,13 +15,13 @@ MODELS = [
     "mistralai/mistral-7b-instruct:free",
 ]
 
-def chat(prompt: str) -> str:
+def chat(text: str) -> str:
     """여러 모델을 순서대로 시도"""
     for model in MODELS:
         try:
             response = client.chat.completions.create(
                 model=model,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": text}]
             )
             return response.choices[0].message.content
         except Exception as e:
