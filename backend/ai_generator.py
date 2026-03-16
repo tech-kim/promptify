@@ -67,6 +67,7 @@ def generate_analysis(song_info: dict) -> dict:
 8. Avoid: 피해야 할 요소
 
 특정 아티스트나 멜로디를 직접 복사하지 말고 영향을 묘사로만 표현할 것
+아티스트 이름, 곡 제목, 앨범명을 프롬프트 안에 절대 포함하지 말 것
 """
 
     response = client.chat.completions.create(
@@ -90,7 +91,12 @@ def generate_analysis(song_info: dict) -> dict:
                 raw = truncated[:last_period + 1]
             else:
                 raw = truncated
-        suno_prompt = raw
+        # 아티스트명, 곡명 직접 언급 필터링
+        words_to_remove = [title, artist]
+        for word in words_to_remove:
+            if word and word.lower() != "unknown":
+                raw = raw.replace(word, "").replace(word.lower(), "")
+        suno_prompt = raw.strip()
 
     return {
         "report": report,
