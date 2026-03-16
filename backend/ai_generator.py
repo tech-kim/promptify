@@ -10,8 +10,10 @@ client = OpenAI(
 )
 
 MODELS = [
+    "openrouter/auto",
+    "meta-llama/llama-4-maverick:free",
+    "meta-llama/llama-4-scout:free",
     "meta-llama/llama-3.3-70b-instruct:free",
-    "deepseek/deepseek-r1:free",
     "google/gemma-3-27b-it:free",
     "mistralai/mistral-7b-instruct:free",
 ]
