@@ -1,5 +1,6 @@
 from openai import OpenAI
 import os
+import re
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
@@ -9,13 +10,52 @@ client = OpenAI(
 )
 
 
+def extract_song_attributes(title: str, artist: str) -> dict:
+    """곡의 길이와 음색을 AI로 추론해서 추출"""
+    prompt = f"""
+다음 곡의 정보를 JSON으로만 답하세요. 다른 텍스트 없이 JSON만 출력하세요.
+
+곡: {title}
+아티스트: {artist}
+
+출력 형식:
+{{
+  "duration": "3:45",
+  "timbre": "warm synth pad, bright pluck, punchy kick"
+}}
+
+duration은 실제 곡 길이를 mm:ss 형식으로,
+timbre는 이 곡의 대표 음색/파형을 영어로 3가지 이내로 작성하세요.
+"""
+    response = client.chat.completions.create(
+        model="meta-llama/llama-3.3-70b-instruct:free",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    raw = response.choices[0].message.content.strip()
+    raw = raw.replace("```json", "").replace("```", "").strip()
+    try:
+        import json
+        data = json.loads(raw)
+        return {
+            "duration": data.get("duration", ""),
+            "timbre": data.get("timbre", "")
+        }
+    except:
+        return {"duration": "", "timbre": ""}
+
+
 def generate_analysis(song_info: dict) -> dict:
     title = song_info.get("title", "Unknown")
     artist = song_info.get("artist", "Unknown")
-    bpm = song_info.get("bpm", "?")
-    key = song_info.get("key", "?")
-    energy = song_info.get("energy_label", "?")
-    genre = song_info.get("genre_guess", "?")
+    bpm = song_info.get("bpm", "알 수 없음")
+    key = song_info.get("key", "알 수 없음")
+    energy = song_info.get("energy_label", "알 수 없음")
+    genre = song_info.get("genre_guess", "알 수 없음")
+
+    # 곡 길이 & 음색 추론
+    attrs = extract_song_attributes(title, artist)
+    duration = attrs.get("duration", "")
+    timbre = attrs.get("timbre", "")
 
     prompt = f"""
 당신은 전문 A&R 애널리스트입니다. 아래 곡을 분석해주세요.
@@ -49,32 +89,16 @@ def generate_analysis(song_info: dict) -> dict:
 
 ## 🎛️ Suno AI 프롬프트
 아래 규칙을 반드시 지켜서 Suno AI 프롬프트를 영어로 작성하세요:
-
-규칙:
 - 코드블록(```) 없이 순수 텍스트 한 단락만 작성
 - 반드시 950자(영문 공백 포함) 이내로 작성
-- 작성 후 Python으로 len()을 사용해 글자 수를 확인하고 950자 초과 시 줄일 것
-- 글자 수 확인 코드와 결과는 출력하지 말 것, 최종 프롬프트 텍스트만 출력
-
-구조 순서 (단락 안에서 이 순서로):
-1. Hook-in-5: 첫 5초 안에 귀를 사로잡는 구체적인 음악적 순간 묘사 (오프닝 리프, 비트 드롭, 보컬 브레스 등)
-2. Emotional overview: 전체적인 감성과 무드
-3. Instrumentation: 악기 구성
-4. Harmony: 화성 방향
-5. Vocal: 보컬 스타일
-6. Structure: 곡 구성
-7. Mix: 믹스 질감
-8. Avoid: 피해야 할 요소
-
-특정 아티스트나 멜로디를 직접 복사하지 말고 영향을 묘사로만 표현할 것
-아티스트 이름, 곡 제목, 앨범명을 프롬프트 안에 절대 포함하지 말 것
+- 아티스트 이름, 곡 제목, 앨범명을 절대 포함하지 말 것
+- Hook-in-5 → Emotional overview → Instrumentation → Harmony → Vocal → Structure → Mix → Avoid 순서로 작성
+- 특정 아티스트나 멜로디를 직접 복사하지 말고 영향을 묘사로만 표현할 것
 """
 
     response = client.chat.completions.create(
-        model="openrouter/auto",
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
+        model="meta-llama/llama-3.3-70b-instruct:free",
+        messages=[{"role": "user", "content": prompt}]
     )
 
     report = response.choices[0].message.content
@@ -83,6 +107,7 @@ def generate_analysis(song_info: dict) -> dict:
     if "🎛️ Suno AI 프롬프트" in report:
         raw = report.split("🎛️ Suno AI 프롬프트")[-1].strip()
         raw = raw.replace("```english", "").replace("```", "").strip()
+
         # 950자 초과 시 마지막 문장 단위로 자르기
         if len(raw) > 950:
             truncated = raw[:950]
@@ -91,12 +116,21 @@ def generate_analysis(song_info: dict) -> dict:
                 raw = truncated[:last_period + 1]
             else:
                 raw = truncated
+
         # 아티스트명, 곡명 직접 언급 필터링
         words_to_remove = [title, artist]
         for word in words_to_remove:
             if word and word.lower() != "unknown":
                 raw = raw.replace(word, "").replace(word.lower(), "")
-        suno_prompt = raw.strip()
+
+        # 곡 길이 & 음색 강제 삽입
+        prefix = ""
+        if duration:
+            prefix += f"[Duration: {duration}] "
+        if timbre:
+            prefix += f"[Timbre: {timbre}] "
+
+        suno_prompt = (prefix + raw).strip()
 
     return {
         "report": report,
