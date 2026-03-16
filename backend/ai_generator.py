@@ -8,7 +8,27 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
+MODELS = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "deepseek/deepseek-r1:free",
+    "google/gemma-3-27b-it:free",
+    "mistralai/mistral-7b-instruct:free",
+]
 
+def chat(prompt: str) -> str:
+    """여러 모델을 순서대로 시도"""
+    for model in MODELS:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            if "429" in str(e) or "rate" in str(e).lower() or "404" in str(e):
+                continue
+            raise e
+    raise Exception("모든 모델이 rate limit에 걸렸습니다. 잠시 후 다시 시도해주세요.")
 
 def extract_song_attributes(title: str, artist: str) -> dict:
     """곡의 길이와 음색을 AI로 추론해서 추출"""
@@ -27,10 +47,7 @@ def extract_song_attributes(title: str, artist: str) -> dict:
 duration은 실제 곡 길이를 mm:ss 형식으로,
 timbre는 이 곡의 대표 음색/파형을 영어로 3가지 이내로 작성하세요.
 """
-    response = client.chat.completions.create(
-        model="meta-llama/llama-3.3-70b-instruct:free",
-        messages=[{"role": "user", "content": prompt}]
-    )
+    raw = chat(prompt)
     raw = response.choices[0].message.content.strip()
     raw = raw.replace("```json", "").replace("```", "").strip()
     try:
@@ -51,6 +68,7 @@ def generate_analysis(song_info: dict) -> dict:
     key = song_info.get("key", "알 수 없음")
     energy = song_info.get("energy_label", "알 수 없음")
     genre = song_info.get("genre_guess", "알 수 없음")
+    report = chat(prompt)
 
     # 곡 길이 & 음색 추론
     attrs = extract_song_attributes(title, artist)
