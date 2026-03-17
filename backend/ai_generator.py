@@ -232,6 +232,19 @@ def generate_analysis(song_info: dict) -> dict:
     # 1. 곡 속성 추론
     attrs = extract_song_attributes(title, artist, genre, tempo_hint)
 
+    # 사용자 템포 선택이 있으면 energy_level과 tempo_bpm 강제 덮어쓰기
+    TEMPO_ENERGY_MAP = {
+        "slow": ("low", "70"),
+        "medium": ("medium", "100"),
+        "fast": ("high", "130"),
+        "very_fast": ("very high", "165"),
+    }
+    if tempo_user and tempo_user in TEMPO_ENERGY_MAP:
+        forced_energy, forced_bpm = TEMPO_ENERGY_MAP[tempo_user]
+        attrs["energy_level"] = forced_energy
+        attrs["tempo_bpm"] = forced_bpm
+        attrs["tempo_feel"] = TEMPO_MAP[tempo_user]
+
     # 2. 리포트 생성
     report_prompt = f"""당신은 전문 A&R 애널리스트입니다. 아래 곡을 분석해주세요.
 
