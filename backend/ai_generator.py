@@ -81,6 +81,11 @@ Definitions:
 
 Be SPECIFIC to this exact song. Do not generalize by genre.
 If this is a ballad, say ballad. If it's slow, say slow. Do not over-energize.
+CRITICAL for K-pop girl groups: performance/stage songs with choreography are typically HIGH or VERY HIGH energy.
+If the song is known as a title track or performance number, energy_level should be "high" or "very high".
+If the song has a strong dance beat, club-ready production, or is used for stage performance, it is NOT low energy.
+Examples of HIGH energy K-pop: girl group title tracks, dance challenges, stage performance songs.
+Examples of LOW energy K-pop: ballads, slow OSTs, acoustic versions.
 """
     try:
         raw = chat(prompt)
