@@ -394,8 +394,38 @@
   }
   footer a { color: var(--accent); text-decoration: none; }
 
-  @media (max-width: 480px) {
+  @media (max-width: 500px) {
+    .container { padding: 32px 16px 60px; }
+
+    h1 { font-size: 48px; letter-spacing: -2px; }
+
+    .badge { font-size: 10px; }
+
+    .subtitle { font-size: 13px; }
+
+    .input-card { padding: 20px 16px; }
+
     .input-row { grid-template-columns: 1fr; }
+
+    .analyze-btn { padding: 18px; font-size: 16px; }
+
+    .tabs { flex-direction: row; }
+    .tab { font-size: 12px; padding: 10px 6px; }
+
+    .report-section { padding: 16px; }
+    .section-content { font-size: 13px; }
+
+    .suno-card { padding: 16px; }
+    .suno-text { font-size: 13px; }
+
+    .action-row { flex-direction: column; }
+    .btn-secondary, .btn-suno { width: 100%; padding: 14px; font-size: 14px; }
+
+    .song-title-display { font-size: 16px; }
+
+    .meta-tag { font-size: 11px; }
+
+    .toast { width: 80%; text-align: center; font-size: 12px; }
   }
 </style>
 </head>
@@ -416,11 +446,11 @@
     <div class="input-row">
       <div class="input-group">
         <label>곡 제목</label>
-        <input type="text" id="titleInput" placeholder="예: Dynamite" />
+        <input type="text" id="titleInput" placeholder="예: La La Love Me" />
       </div>
       <div class="input-group">
         <label>아티스트</label>
-        <input type="text" id="artistInput" placeholder="예: BTS" />
+        <input type="text" id="artistInput" placeholder="예: VIVIZ" />
       </div>
     </div>
     <div class="input-row">
