@@ -16,7 +16,7 @@ def chat(text: str) -> str:
     # 1. Gemini 시도
     if GEMINI_API_KEY:
         try:
-            model = genai.GenerativeModel("gemini-2.0-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content(text)
             return response.text
         except Exception as e:
