@@ -116,6 +116,8 @@ Examples of LOW energy K-pop: ballads, slow OSTs, acoustic versions.
 def trim_to_limit(text: str, limit: int) -> str:
     if len(text) <= limit:
         return text
+
+    # 1. 문장 단위로 자르기 시도
     sentences = re.split(r'(?<=[.!?])\s+', text)
     result = ""
     for sentence in sentences:
@@ -123,9 +125,28 @@ def trim_to_limit(text: str, limit: int) -> str:
             result += ("" if not result else " ") + sentence
         else:
             break
+
+    # 2. 문장 분리 실패 시 (문장이 너무 길면) — 세미콜론이나 쉼표 기준으로 자르기
     if not result:
-        words = text[:limit].split(" ")
-        result = " ".join(words[:-1])
+        chunks = re.split(r'(?<=[,;])\s+', text)
+        for chunk in chunks:
+            if len(result) + len(chunk) + 1 <= limit:
+                result += ("" if not result else " ") + chunk
+            else:
+                break
+
+    # 3. 그래도 없으면 단어 단위로 자르되 마지막 완전한 단어까지만
+    if not result:
+        words = text[:limit].rsplit(" ", 1)
+        result = words[0]
+
+    # 4. 마지막이 완전한 문장으로 끝나지 않으면 마침표 추가
+    result = result.strip()
+    if result and result[-1] not in '.!?':
+        last_end = max(result.rfind('.'), result.rfind('!'), result.rfind('?'))
+        if last_end > len(result) // 2:
+            result = result[:last_end + 1]
+
     return result.strip()
 
 
