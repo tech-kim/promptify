@@ -597,25 +597,8 @@ function renderReport(report) {
 }
 
 function renderSunoPrompt(text) {
-  // Duration, Timbre 태그 추출
-  const metaContainer = document.getElementById('sunoMeta');
-  metaContainer.innerHTML = '';
-
-  const durationMatch = text.match(/\[Duration:\s*([^\]]+)\]/);
-  const timbreMatch = text.match(/\[Timbre:\s*([^\]]+)\]/);
-
-  if (durationMatch) {
-    metaContainer.innerHTML += `<span class="meta-tag">⏱ ${durationMatch[1]}</span>`;
-  }
-  if (timbreMatch) {
-    timbreMatch[1].split(',').forEach(t => {
-      metaContainer.innerHTML += `<span class="meta-tag">🎛 ${t.trim()}</span>`;
-    });
-  }
-
-  // 태그 제거한 순수 텍스트
-  const clean = text.replace(/\[Duration:[^\]]+\]/g, '').replace(/\[Timbre:[^\]]+\]/g, '').trim();
-  document.getElementById('sunoText').textContent = clean;
+  document.getElementById('sunoMeta').innerHTML = '';
+  document.getElementById('sunoText').textContent = text;
 }
 
 function showError(msg) {

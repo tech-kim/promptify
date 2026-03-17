@@ -147,7 +147,9 @@ def generate_analysis(song_info: dict) -> dict:
 - 아티스트 이름, 곡 제목, 앨범명을 절대 포함하지 말 것
 - Hook-in-5 → Emotional overview → Instrumentation → Harmony → Vocal → Structure → Mix → Avoid 순서로 작성
 - Hook-in-5는 반드시 완전한 문장으로 시작할 것
-- 위에 제공된 실제 음색과 핵심 악기를 반드시 반영할 것
+- 위에 제공된 실제 음색, 핵심 악기, 곡 길이를 태그나 괄호 형식 없이 자연스러운 영문 문장 안에 녹여서 표현할 것
+- 예: [Duration: 3:45] 대신 "a three-minute-forty-five-second track" 으로
+- 예: [Timbre: warm synth pad] 대신 "opening with a warm synth pad that..." 으로
 - 이 곡만의 장르적 독창성을 구체적으로 묘사할 것
 - 특정 아티스트나 멜로디를 직접 복사하지 말고 영향을 묘사로만 표현할 것
 """
@@ -168,14 +170,7 @@ def generate_analysis(song_info: dict) -> dict:
             if word and word.lower() != "unknown":
                 raw = raw.replace(word, "").replace(word.lower(), "")
 
-        # Duration, Timbre 강제 삽입
-        prefix = ""
-        if duration:
-            prefix += f"[Duration: {duration}] "
-        if timbre:
-            prefix += f"[Timbre: {timbre}] "
-
-        suno_prompt = (prefix + raw).strip()
+        suno_prompt = raw.strip()
 
     return {
         "report": report,
