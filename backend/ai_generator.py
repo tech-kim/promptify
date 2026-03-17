@@ -166,7 +166,8 @@ Strict rules:
 10. Every sentence must be grammatically complete
 
 Output the prompt text only. Nothing else.
-IMPORTANT: Never start a word mid-way. Every word must be complete. If you are near the character limit, finish the current sentence and stop."""
+IMPORTANT: Never start a word mid-way. Every word must be complete. If you are near the character limit, finish the current sentence and stop.
+BANNED WORDS: Never use the word "powerful" or "empowering" - replace with "intense", "commanding", "forceful", "strong", or "bold" instead."""
 
     raw = chat(prompt)
     raw = raw.strip().replace("```", "")
