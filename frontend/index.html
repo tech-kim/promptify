@@ -26,8 +26,6 @@
     overflow-x: hidden;
     width: 100%;
   }
-
-  /* 배경 그라디언트 */
   body::before {
     content: '';
     position: fixed;
@@ -40,7 +38,6 @@
     pointer-events: none;
     z-index: 0;
   }
-
   .container {
     max-width: 720px;
     margin: 0 auto;
@@ -48,8 +45,6 @@
     position: relative;
     z-index: 1;
   }
-
-  /* 헤더 */
   .header { margin-bottom: 48px; text-align: center; }
   .badge {
     display: inline-flex;
@@ -88,13 +83,7 @@
   }
   h1 .accent { color: var(--accent); }
   h1 .accent2 { color: var(--accent2); }
-  .subtitle {
-    color: var(--muted);
-    font-size: 15px;
-    line-height: 1.6;
-  }
-
-  /* 웨이브 */
+  .subtitle { color: var(--muted); font-size: 15px; line-height: 1.6; }
   .wave {
     display: flex;
     gap: 3px;
@@ -123,8 +112,6 @@
     0%,100%{transform:scaleY(1)}
     50%{transform:scaleY(0.3)}
   }
-
-  /* 입력 카드 */
   .input-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -132,17 +119,14 @@
     padding: 28px;
     margin-bottom: 16px;
   }
-
   .input-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     margin-bottom: 12px;
   }
-
   .input-group { display: flex; flex-direction: column; gap: 6px; }
   .input-group.full { grid-column: 1 / -1; }
-
   label {
     font-size: 11px;
     color: var(--muted);
@@ -150,7 +134,6 @@
     font-family: 'Syne', sans-serif;
     text-transform: uppercase;
   }
-
   input {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -168,7 +151,32 @@
     box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
   }
   input::placeholder { color: var(--muted); font-size: 14px; }
-
+  .tempo-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tempo-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 8px;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Syne', sans-serif;
+    min-width: 80px;
+    width: auto;
+    margin-top: 0;
+  }
+  .tempo-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tempo-btn.selected {
+    background: rgba(108,99,255,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
   .analyze-btn {
     width: 100%;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -189,8 +197,6 @@
   .analyze-btn:hover { opacity: 0.92; transform: translateY(-1px); }
   .analyze-btn:active { transform: translateY(0); }
   .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  /* 에러 */
   .error {
     background: rgba(255,101,132,0.08);
     border: 1px solid rgba(255,101,132,0.2);
@@ -201,8 +207,6 @@
     margin-top: 12px;
     display: none;
   }
-
-  /* 로딩 */
   .loading {
     text-align: center;
     padding: 40px;
@@ -228,10 +232,7 @@
     0%,100%{transform:scale(1);opacity:0.4}
     50%{transform:scale(1.4);opacity:1}
   }
-
-  /* 결과 */
   .result { display: none; margin-top: 16px; }
-
   .result-header {
     display: flex;
     align-items: center;
@@ -244,8 +245,6 @@
     font-weight: 700;
   }
   .song-title-display span { color: var(--muted); font-size: 14px; font-weight: 400; margin-left: 8px; }
-
-  /* 탭 */
   .tabs {
     display: flex;
     gap: 4px;
@@ -271,8 +270,6 @@
     color: var(--text);
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
-
-  /* 리포트 */
   .report-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -298,8 +295,6 @@
     color: #c8c8e0;
     white-space: pre-wrap;
   }
-
-  /* Suno 프롬프트 */
   .suno-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -328,12 +323,7 @@
     color: var(--accent);
     font-family: 'Syne', sans-serif;
   }
-
-  /* 버튼들 */
-  .action-row {
-    display: flex;
-    gap: 8px;
-  }
+  .action-row { display: flex; gap: 8px; }
   .btn-secondary {
     flex: 1;
     background: var(--surface);
@@ -362,8 +352,6 @@
     transition: opacity 0.2s;
   }
   .btn-suno:hover { opacity: 0.88; }
-
-  /* 토스트 */
   .toast {
     position: fixed;
     bottom: 32px;
@@ -385,7 +373,6 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
-
   footer {
     text-align: center;
     margin-top: 60px;
@@ -394,43 +381,28 @@
     font-family: 'Syne', sans-serif;
   }
   footer a { color: var(--accent); text-decoration: none; }
-
   @media (max-width: 500px) {
     .container { padding: 32px 16px 60px; width: 100%; overflow-x: hidden; }
     .report-card, .suno-card { width: 100%; overflow: hidden; }
     .section-content, .suno-text { word-break: break-word; overflow-wrap: break-word; }
-    .tabs { width: 100%; }
-    .tab { font-size: 11px; padding: 10px 4px; }
-
     h1 { font-size: 36px; letter-spacing: -1px; }
-
     .badge { font-size: 10px; }
-
     .subtitle { font-size: 13px; }
-
     .input-card { padding: 20px 16px; }
-
     .input-row { grid-template-columns: 1fr; }
-
     .analyze-btn { padding: 18px; font-size: 16px; }
-
-    .tabs { flex-direction: row; }
+    .tabs { flex-direction: row; width: 100%; }
     .tab { font-size: 12px; padding: 10px 6px; }
-
     .report-section { padding: 16px; }
     .section-content { font-size: 13px; }
-
     .suno-card { padding: 16px; }
     .suno-text { font-size: 13px; }
-
     .action-row { flex-direction: column; }
     .btn-secondary, .btn-suno { width: 100%; padding: 14px; font-size: 14px; }
-
     .song-title-display { font-size: 16px; }
-
     .meta-tag { font-size: 11px; }
-
     .toast { width: 80%; text-align: center; font-size: 12px; }
+    .tempo-btn { font-size: 11px; padding: 10px 4px; }
   }
 </style>
 </head>
@@ -464,6 +436,15 @@
         <input type="text" id="genreInput" placeholder="예: K-Pop, EDM, R&B ..." />
       </div>
     </div>
+    <div class="input-group" style="margin-bottom: 12px;">
+      <label>템포 느낌 (선택)</label>
+      <div class="tempo-selector">
+        <button class="tempo-btn" onclick="selectTempo(this, 'slow')">🐢 느림</button>
+        <button class="tempo-btn" onclick="selectTempo(this, 'medium')">🚶 보통</button>
+        <button class="tempo-btn" onclick="selectTempo(this, 'fast')">🏃 빠름</button>
+        <button class="tempo-btn" onclick="selectTempo(this, 'very_fast')">⚡ 매우 빠름</button>
+      </div>
+    </div>
     <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">▶ 분석 시작</button>
     <div id="error" class="error"></div>
   </div>
@@ -479,16 +460,13 @@
     <div class="result-header">
       <div class="song-title-display" id="songTitleDisplay"></div>
     </div>
-
     <div class="tabs">
       <div class="tab active" onclick="switchTab('report')">📄 분석 리포트</div>
       <div class="tab" onclick="switchTab('suno')">🎛️ Suno 프롬프트</div>
     </div>
-
     <div id="reportContent">
       <div class="report-card" id="reportSections"></div>
     </div>
-
     <div id="sunoContent" style="display:none">
       <div class="suno-card">
         <div class="suno-meta" id="sunoMeta"></div>
@@ -511,14 +489,13 @@
 <script>
 const API_BASE = "https://promptify-q3oh.onrender.com";
 let sunoText = "";
+let selectedTempo = "";
 
-const SECTION_MAP = {
-  "이 곡의 정체": "이 곡의 정체",
-  "왜 귀에 꽂히는가": "왜 귀에 꽂히는가",
-  "이 곡의 DNA": "이 곡의 DNA",
-  "누가 이 곡을 찾는가": "누가 이 곡을 찾는가",
-  "AI 작곡가를 위한 인사이트": "AI 작곡가를 위한 인사이트",
-};
+function selectTempo(el, value) {
+  document.querySelectorAll('.tempo-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTempo = value;
+}
 
 async function analyze() {
   const title = document.getElementById('titleInput').value.trim();
@@ -536,22 +513,17 @@ async function analyze() {
     const res = await fetch(`${API_BASE}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, artist, genre })
+      body: JSON.stringify({ title, artist, genre, tempo: selectedTempo })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '분석 실패');
 
-    // 곡 제목 표시
     document.getElementById('songTitleDisplay').innerHTML =
       `${title}<span>${artist ? '· ' + artist : ''}</span>`;
 
-    // 리포트 파싱해서 섹션별로 분리
     renderReport(data.report);
-
-    // Suno 프롬프트
     sunoText = data.suno_prompt || "";
     renderSunoPrompt(sunoText);
-
     document.getElementById('result').style.display = 'block';
   } catch(e) {
     showError("분석 중 오류가 발생했습니다: " + e.message);
@@ -564,7 +536,6 @@ async function analyze() {
 function renderReport(report) {
   const container = document.getElementById('reportSections');
   container.innerHTML = '';
-
   const lines = report.split('\n');
   let currentLabel = '';
   let currentContent = [];
@@ -585,10 +556,7 @@ function renderReport(report) {
     const headMatch = line.match(/^##\s+(.+)/);
     if (headMatch) {
       flush();
-      // 이모지 제거하고 레이블로
       currentLabel = headMatch[1].replace(/[^\w\s가-힣]/g, '').trim();
-    } else if (line.includes('Suno AI 프롬프트')) {
-      break;
     } else {
       currentContent.push(line);
     }
@@ -619,10 +587,7 @@ function switchTab(tab) {
     document.getElementById('sunoContent').style.display = 'block';
   }
 }
-function renderSunoPrompt(text) {
-  document.getElementById('sunoMeta').innerHTML = '';
-  document.getElementById('sunoText').textContent = text;
-}
+
 function copyPrompt() {
   navigator.clipboard.writeText(sunoText).then(() => {
     const toast = document.getElementById('toast');
