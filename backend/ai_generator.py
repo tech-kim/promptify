@@ -50,12 +50,15 @@ def chat(text: str) -> str:
     raise Exception("모든 모델이 rate limit에 걸렸습니다. 잠시 후 다시 시도해주세요.")
 
 
-def extract_song_attributes(title: str, artist: str, genre: str) -> dict:
+def extract_song_attributes(title: str, artist: str, genre: str, tempo_hint: str = "") -> dict:
     prompt = f"""You are a music expert with deep knowledge of Korean and international pop music.
 Analyze this specific song and return ONLY a JSON object.
 
 Song: "{title}" by {artist}
 Genre hint: {genre if genre else "unknown"}
+User tempo hint: {tempo_hint if tempo_hint else "not provided - infer from the song"}
+CRITICAL: If user tempo hint is provided, override your BPM and energy_level inference with it.
+
 
 Return exactly this JSON format:
 {{
@@ -216,9 +219,18 @@ def generate_analysis(song_info: dict) -> dict:
     title = song_info.get("title", "Unknown")
     artist = song_info.get("artist", "Unknown")
     genre = song_info.get("genre_guess", "")
+    tempo_user = song_info.get("tempo_user", "")
+
+    TEMPO_MAP = {
+        "slow": "60-80 BPM, LOW energy, slow ballad-like feel. Use: gentle, soft, subtle, delicate.",
+        "medium": "90-110 BPM, MEDIUM energy, moderate mid-tempo feel. Use: flowing, moderate, steady.",
+        "fast": "120-140 BPM, HIGH energy, fast energetic dance feel. Use: driving, upbeat, energetic, vibrant.",
+        "very_fast": "150-180 BPM, VERY HIGH energy, intense feel. Use: explosive, intense, commanding, forceful.",
+    }
+    tempo_hint = TEMPO_MAP.get(tempo_user, "")
 
     # 1. 곡 속성 추론
-    attrs = extract_song_attributes(title, artist, genre)
+    attrs = extract_song_attributes(title, artist, genre, tempo_hint)
 
     # 2. 리포트 생성
     report_prompt = f"""당신은 전문 A&R 애널리스트입니다. 아래 곡을 분석해주세요.
