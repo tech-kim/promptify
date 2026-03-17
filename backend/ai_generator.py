@@ -1,6 +1,7 @@
 from openai import OpenAI
 import os
 import json
+import re
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
@@ -34,7 +35,8 @@ def chat(text: str) -> str:
 
 
 def extract_song_attributes(title: str, artist: str, genre: str) -> dict:
-    prompt = f"""You are a music expert. Analyze this song and return ONLY a JSON object with no explanation.
+    prompt = f"""You are a music expert with deep knowledge of Korean and international pop music.
+Analyze this specific song and return ONLY a JSON object.
 
 Song: "{title}" by {artist}
 Genre hint: {genre if genre else "unknown"}
@@ -42,22 +44,31 @@ Genre hint: {genre if genre else "unknown"}
 Return exactly this JSON format:
 {{
   "duration": "3:45",
-  "timbre": "distorted electric guitar, punchy 808 bass, crisp trap hi-hats",
-  "tempo_feel": "aggressive and driving",
-  "key_instruments": "trap drums, orchestral strings, brass stabs"
+  "timbre": "soft piano, warm synth pads, gentle acoustic guitar",
+  "tempo_feel": "slow and melancholic",
+  "energy_level": "low",
+  "mood": "bittersweet, nostalgic, emotional",
+  "key_instruments": "piano, synth pad, light percussion",
+  "vocal_style": "soft female vocals, emotional delivery, harmonized chorus",
+  "tempo_bpm": "75"
 }}
 
-Rules:
-- duration: the ACTUAL real-world length of this specific song in mm:ss format
-- timbre: 3 most distinctive sound textures of THIS specific song (not generic)
-- tempo_feel: 2-3 words describing the rhythmic energy
-- key_instruments: 3-4 most important instruments in THIS specific song
-- Be specific to this song, not generic to the genre
+Definitions:
+- duration: ACTUAL real length of this specific song in mm:ss
+- timbre: 3 most distinctive sound textures specific to THIS song
+- tempo_feel: 3-4 words describing the rhythmic energy
+- energy_level: must be one of: "very low" / "low" / "medium" / "high" / "very high"
+- mood: 3 emotional adjectives specific to THIS song
+- key_instruments: 3-4 most prominent instruments in THIS song
+- vocal_style: vocal characteristics specific to this song
+- tempo_bpm: estimated BPM as a number string
+
+Be SPECIFIC to this exact song. Do not generalize by genre.
+If this is a ballad, say ballad. If it's slow, say slow. Do not over-energize.
 """
     try:
         raw = chat(prompt)
         raw = raw.replace("```json", "").replace("```", "").strip()
-        # JSON 부분만 추출
         start = raw.find("{")
         end = raw.rfind("}") + 1
         if start >= 0 and end > start:
@@ -67,18 +78,23 @@ Rules:
             "duration": data.get("duration", ""),
             "timbre": data.get("timbre", ""),
             "tempo_feel": data.get("tempo_feel", ""),
-            "key_instruments": data.get("key_instruments", "")
+            "energy_level": data.get("energy_level", "medium"),
+            "mood": data.get("mood", ""),
+            "key_instruments": data.get("key_instruments", ""),
+            "vocal_style": data.get("vocal_style", ""),
+            "tempo_bpm": data.get("tempo_bpm", "")
         }
     except:
-        return {"duration": "", "timbre": "", "tempo_feel": "", "key_instruments": ""}
+        return {
+            "duration": "", "timbre": "", "tempo_feel": "",
+            "energy_level": "medium", "mood": "",
+            "key_instruments": "", "vocal_style": "", "tempo_bpm": ""
+        }
 
 
 def trim_to_limit(text: str, limit: int) -> str:
-    """문장 단위로 limit 이하로 자르기"""
     if len(text) <= limit:
         return text
-    # 마침표, 느낌표, 물음표 기준으로 문장 분리
-    import re
     sentences = re.split(r'(?<=[.!?])\s+', text)
     result = ""
     for sentence in sentences:
@@ -86,29 +102,75 @@ def trim_to_limit(text: str, limit: int) -> str:
             result += ("" if not result else " ") + sentence
         else:
             break
-    # 문장 분리 실패 시 단어 단위로 자르기
     if not result:
         words = text[:limit].split(" ")
         result = " ".join(words[:-1])
     return result.strip()
 
 
+def generate_suno_prompt(title: str, artist: str, attrs: dict) -> str:
+    timbre = attrs.get("timbre", "")
+    key_instruments = attrs.get("key_instruments", "")
+    tempo_feel = attrs.get("tempo_feel", "")
+    energy_level = attrs.get("energy_level", "medium")
+    mood = attrs.get("mood", "")
+    vocal_style = attrs.get("vocal_style", "")
+    tempo_bpm = attrs.get("tempo_bpm", "")
+    duration = attrs.get("duration", "")
+
+    dur_text = ""
+    if duration:
+        parts = duration.split(":")
+        if len(parts) == 2:
+            dur_text = f"a {parts[0]} minute {parts[1]} second track"
+
+    prompt = f"""Write a Suno AI music generation prompt based on these EXACT song attributes.
+You must faithfully reflect the energy and mood - do not make it more energetic than specified.
+
+Song attributes:
+- Energy level: {energy_level} (CRITICAL: reflect this accurately)
+- Mood: {mood}
+- Tempo feel: {tempo_feel}
+- Estimated BPM: {tempo_bpm}
+- Timbre: {timbre}
+- Key instruments: {key_instruments}
+- Vocal style: {vocal_style}
+- Length: {dur_text}
+
+Strict rules:
+1. Write ONE complete paragraph only
+2. Maximum 700 characters including spaces
+3. Never mention any artist name or song title
+4. Start with a COMPLETE sentence describing the opening 5 seconds
+5. Follow this exact order: opening hook → overall mood → instruments → harmony → vocals → structure → mix → what to avoid
+6. Energy level "{energy_level}" must be clearly reflected throughout
+7. If energy is low/very low: use words like gentle, soft, subtle, delicate
+8. If energy is high/very high: use words like driving, powerful, explosive, intense
+9. No tags or brackets - natural flowing prose only
+10. Every sentence must be grammatically complete
+
+Output the prompt text only. Nothing else."""
+
+    raw = chat(prompt)
+    raw = raw.strip().replace("```", "")
+    raw = trim_to_limit(raw, 700)
+
+    for word in [title, artist]:
+        if word and word.lower() != "unknown":
+            raw = raw.replace(word, "").replace(word.lower(), "")
+
+    return raw.strip()
+
+
 def generate_analysis(song_info: dict) -> dict:
     title = song_info.get("title", "Unknown")
     artist = song_info.get("artist", "Unknown")
-    bpm = song_info.get("bpm", "알 수 없음")
-    key = song_info.get("key", "알 수 없음")
-    energy = song_info.get("energy_label", "알 수 없음")
     genre = song_info.get("genre_guess", "")
 
-    # 곡 속성 추론
+    # 1. 곡 속성 추론
     attrs = extract_song_attributes(title, artist, genre)
-    duration = attrs.get("duration", "")
-    timbre = attrs.get("timbre", "")
-    tempo_feel = attrs.get("tempo_feel", "")
-    key_instruments = attrs.get("key_instruments", "")
 
-    # 리포트 생성
+    # 2. 리포트 생성
     report_prompt = f"""당신은 전문 A&R 애널리스트입니다. 아래 곡을 분석해주세요.
 
 곡 정보:
@@ -131,46 +193,12 @@ def generate_analysis(song_info: dict) -> dict:
 (타겟 청취자를 구체적인 상황과 감정으로 묘사)
 
 ## 💡 AI 작곡가를 위한 인사이트
-(이 곡의 성공 요소를 AI 음악 제작에 활용하는 실용적 팁 2가지)
-
-## 🎛️ Suno AI 프롬프트
-아래 분석된 곡 속성을 반드시 반영하여 Suno AI 프롬프트를 영어로 작성하세요:
-
-확인된 곡 속성:
-- 실제 음색: {timbre if timbre else "분석 불가"}
-- 핵심 악기: {key_instruments if key_instruments else "분석 불가"}
-- 리듬 에너지: {tempo_feel if tempo_feel else "분석 불가"}
-
-규칙:
-- 코드블록(```) 없이 순수 텍스트 한 단락만 작성
-- 반드시 900자(영문 공백 포함) 이내로 작성
-- 아티스트 이름, 곡 제목, 앨범명을 절대 포함하지 말 것
-- Hook-in-5 → Emotional overview → Instrumentation → Harmony → Vocal → Structure → Mix → Avoid 순서로 작성
-- Hook-in-5는 반드시 완전한 문장으로 시작할 것
-- 위에 제공된 실제 음색, 핵심 악기, 곡 길이를 태그나 괄호 형식 없이 자연스러운 영문 문장 안에 녹여서 표현할 것
-- 예: [Duration: 3:45] 대신 "a three-minute-forty-five-second track" 으로
-- 예: [Timbre: warm synth pad] 대신 "opening with a warm synth pad that..." 으로
-- 이 곡만의 장르적 독창성을 구체적으로 묘사할 것
-- 특정 아티스트나 멜로디를 직접 복사하지 말고 영향을 묘사로만 표현할 것
-"""
+(이 곡의 성공 요소를 AI 음악 제작에 활용하는 실용적 팁 2가지)"""
 
     report = chat(report_prompt)
 
-    suno_prompt = ""
-    if "🎛️ Suno AI 프롬프트" in report:
-        raw = report.split("🎛️ Suno AI 프롬프트")[-1].strip()
-        raw = raw.replace("```english", "").replace("```", "").strip()
-
-        # 문장 단위로 900자 이내로 자르기
-        raw = trim_to_limit(raw, 900)
-
-        # 아티스트명, 곡명 필터링
-        words_to_remove = [title, artist]
-        for word in words_to_remove:
-            if word and word.lower() != "unknown":
-                raw = raw.replace(word, "").replace(word.lower(), "")
-
-        suno_prompt = raw.strip()
+    # 3. Suno 프롬프트 별도 생성
+    suno_prompt = generate_suno_prompt(title, artist, attrs)
 
     return {
         "report": report,
