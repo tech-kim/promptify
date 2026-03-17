@@ -155,7 +155,7 @@ Song attributes:
 
 Strict rules:
 1. Write ONE complete paragraph only
-2. Maximum 700 characters including spaces
+2. Write between 500-600 characters. Do not exceed 600 characters.
 3. Never mention any artist name or song title
 4. Start with a COMPLETE sentence describing the opening 5 seconds
 5. Follow this exact order: opening hook → overall mood → instruments → harmony → vocals → structure → mix → what to avoid
@@ -170,7 +170,7 @@ IMPORTANT: Never start a word mid-way. Every word must be complete. If you are n
 
     raw = chat(prompt)
     raw = raw.strip().replace("```", "")
-    raw = trim_to_limit(raw, 700)
+    raw = trim_to_limit(raw, 600)
 
     # 잘린 단어 감지 - 문장이 완전하지 않으면 마지막 완전한 문장까지만 사용
     if raw and not raw[-1] in '.!?':
