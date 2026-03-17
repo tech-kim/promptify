@@ -16,6 +16,7 @@ class AnalyzeRequest(BaseModel):
     title: str
     artist: str = ""
     genre: str = ""
+    tempo: str = ""
 
 @app.post("/analyze")
 def analyze(req: AnalyzeRequest):
@@ -24,9 +25,7 @@ def analyze(req: AnalyzeRequest):
             "title": req.title,
             "artist": req.artist,
             "genre_guess": req.genre,
-            "bpm": "알 수 없음",
-            "key": "알 수 없음",
-            "energy_label": "알 수 없음",
+            "tempo_user": req.tempo,
         }
         result = generate_analysis(song_info)
         return {
