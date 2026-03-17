@@ -619,7 +619,10 @@ function switchTab(tab) {
     document.getElementById('sunoContent').style.display = 'block';
   }
 }
-
+function renderSunoPrompt(text) {
+  document.getElementById('sunoMeta').innerHTML = '';
+  document.getElementById('sunoText').textContent = text;
+}
 function copyPrompt() {
   navigator.clipboard.writeText(sunoText).then(() => {
     const toast = document.getElementById('toast');
