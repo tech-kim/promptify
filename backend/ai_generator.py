@@ -165,11 +165,18 @@ Strict rules:
 9. No tags or brackets - natural flowing prose only
 10. Every sentence must be grammatically complete
 
-Output the prompt text only. Nothing else."""
+Output the prompt text only. Nothing else.
+IMPORTANT: Never start a word mid-way. Every word must be complete. If you are near the character limit, finish the current sentence and stop."""
 
     raw = chat(prompt)
     raw = raw.strip().replace("```", "")
     raw = trim_to_limit(raw, 700)
+
+    # 잘린 단어 감지 - 문장이 완전하지 않으면 마지막 완전한 문장까지만 사용
+    if raw and not raw[-1] in '.!?':
+        last_sentence_end = max(raw.rfind('.'), raw.rfind('!'), raw.rfind('?'))
+        if last_sentence_end > 0:
+            raw = raw[:last_sentence_end + 1]
 
     for word in [title, artist]:
         if word and word.lower() != "unknown":
