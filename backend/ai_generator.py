@@ -1,25 +1,41 @@
-from openai import OpenAI
 import os
 import json
 import re
+import google.generativeai as genai
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
+# Gemini 설정
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
-MODELS = [
-    "openrouter/auto",
-    "meta-llama/llama-4-maverick:free",
-    "meta-llama/llama-4-scout:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemma-3-27b-it:free",
-    "mistralai/mistral-7b-instruct:free",
-]
 
 def chat(text: str) -> str:
+    """Gemini 우선, 실패시 OpenRouter fallback"""
+    # 1. Gemini 시도
+    if GEMINI_API_KEY:
+        try:
+            model = genai.GenerativeModel("gemini-2.0-flash")
+            response = model.generate_content(text)
+            return response.text
+        except Exception as e:
+            print(f"Gemini 실패: {e}")
+
+    # 2. OpenRouter fallback
+    from openai import OpenAI
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=OPENROUTER_API_KEY,
+    )
+    MODELS = [
+        "openrouter/auto",
+        "meta-llama/llama-4-maverick:free",
+        "meta-llama/llama-4-scout:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "google/gemma-3-27b-it:free",
+        "mistralai/mistral-7b-instruct:free",
+    ]
     for model in MODELS:
         try:
             response = client.chat.completions.create(
