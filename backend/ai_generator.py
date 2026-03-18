@@ -147,10 +147,36 @@ Priority order: genre, sub-genre, key instruments, mood, tempo, production style
 Example format: Neo-soul, Jazz-pop, Rhodes piano, warm analog, mid-tempo, 96 BPM, male tenor vocals
 
 ---OUTPUT 3: SONG STRUCTURE---
-Meta-tag based structure for Suno's lyrics box.
-Use tags like [Intro], [Verse], [Pre-Chorus], [Chorus], [Bridge], [Instrumental Break], [Outro].
-Under each tag, write a brief English description of what instruments/vocals/mood should dominate that section.
-Base the structure on the arrangement analysis above.
+Generate song structure using ONLY bracket tags for Suno's lyrics box.
+
+CRITICAL RULES:
+- Every single piece of text MUST be inside brackets [ ]
+- Text outside brackets = Suno will SING it as lyrics
+- Section tag on its own line: [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Bridge], [Outro]
+- Instrument/mood on next line in own brackets: [soft piano, no vocals]
+- Energy changes in own brackets: [fuller band enters], [stripped back]
+- Max 6 words inside each descriptor bracket
+
+Example format:
+[Intro]
+[soft piano, no vocals]
+
+[Verse 1]
+[minimal beat, deep bass only]
+
+[Pre-Chorus]
+[synth build-up, rising energy]
+
+[Chorus]
+[massive drop, all instruments, powerful vocals]
+
+[Bridge]
+[rhythmic shift, stripped back]
+
+[Outro]
+[driving synths fade out]
+
+Follow this exact format. Base sections on the arrangement analysis.
 
 ---OUTPUT 4: PRO TIPS---
 3-5 bullet points. Each tip should be specific to THIS song's sonic character.
