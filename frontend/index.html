@@ -282,14 +282,57 @@
     color: var(--accent);
     font-family: 'Syne', sans-serif;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
+
+  /* 마크다운 렌더링 스타일 */
   .section-content {
     font-size: 14px;
     line-height: 1.8;
     color: #c8c8e0;
-    white-space: pre-wrap;
   }
+  .section-content p {
+    margin-bottom: 12px;
+  }
+  .section-content p:last-child { margin-bottom: 0; }
+  .section-content strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .section-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+  }
+  .section-content ul li {
+    padding: 6px 0 6px 16px;
+    position: relative;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .section-content ul li:last-child { border-bottom: none; }
+  .section-content ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 11px;
+    top: 8px;
+  }
+  .section-content ul ul {
+    margin: 4px 0 4px 16px;
+  }
+  .section-content ul ul li::before {
+    content: '·';
+    color: var(--muted);
+  }
+  .section-content h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 14px 0 6px;
+    font-family: 'Syne', sans-serif;
+  }
+
   .suno-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -304,6 +347,45 @@
     white-space: pre-wrap;
     margin-bottom: 16px;
   }
+
+  /* Pro Tips 렌더링 스타일 */
+  .tips-content {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #c8c8e0;
+    margin-bottom: 16px;
+  }
+  .tips-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tips-content ul li {
+    background: rgba(108,99,255,0.06);
+    border: 1px solid rgba(108,99,255,0.15);
+    border-radius: 10px;
+    padding: 14px 16px 14px 42px;
+    position: relative;
+    color: #c8c8e0;
+  }
+  .tips-content ul li::before {
+    content: '💡';
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    font-size: 14px;
+  }
+  .tips-content strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .tips-content p {
+    margin-bottom: 8px;
+  }
+
   .action-row { display: flex; gap: 8px; }
   .btn-secondary {
     flex: 1;
@@ -364,7 +446,7 @@
   @media (max-width: 500px) {
     .container { padding: 32px 16px 60px; width: 100%; overflow-x: hidden; }
     .report-card, .suno-card { width: 100%; overflow: hidden; }
-    .section-content, .suno-text { word-break: break-word; overflow-wrap: break-word; }
+    .section-content, .suno-text, .tips-content { word-break: break-word; overflow-wrap: break-word; }
     h1 { font-size: 36px; letter-spacing: -1px; }
     .badge { font-size: 10px; }
     .subtitle { font-size: 13px; }
@@ -491,7 +573,7 @@
     <div id="tipsContent" style="display:none">
       <div class="suno-card">
         <div class="section-label">이 곡 재현을 위한 Pro Tips</div>
-        <div class="suno-text" id="tipsText"></div>
+        <div class="tips-content" id="tipsText"></div>
       </div>
     </div>
   </div>
@@ -531,6 +613,84 @@ function switchTab(tab) {
   document.getElementById(selected.content).style.display = 'block';
 }
 
+// 마크다운 → HTML 변환 함수
+function markdownToHtml(text) {
+  if (!text) return '';
+  const lines = text.split('\n');
+  let html = '';
+  let inUl = false;
+  let ulDepth = 0;
+
+  function closeUl(targetDepth) {
+    while (ulDepth > targetDepth) {
+      html += '</ul>';
+      ulDepth--;
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // ### 소제목
+    if (line.match(/^###\s+(.+)/)) {
+      closeUl(0);
+      inUl = false;
+      const content = line.replace(/^###\s+/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html += `<h3>${content}</h3>`;
+      continue;
+    }
+
+    // 깊이 2 리스트 (들여쓰기 4칸 또는 탭)
+    const deepListMatch = line.match(/^(?:    |\t)\*\s+(.+)/);
+    if (deepListMatch) {
+      if (ulDepth < 2) {
+        if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; }
+        html += '<ul>'; ulDepth = 2;
+        inUl = true;
+      }
+      const content = deepListMatch[1].replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html += `<li>${content}</li>`;
+      continue;
+    }
+
+    // 깊이 1 리스트
+    const listMatch = line.match(/^\*\s+(.+)/);
+    if (listMatch) {
+      if (ulDepth > 1) closeUl(1);
+      if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; inUl = true; }
+      const content = listMatch[1].replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html += `<li>${content}</li>`;
+      continue;
+    }
+
+    // 숫자 리스트 (1. 2. 3.)
+    const numListMatch = line.match(/^\d+\.\s+(.+)/);
+    if (numListMatch) {
+      if (ulDepth > 1) closeUl(1);
+      if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; inUl = true; }
+      const content = numListMatch[1].replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html += `<li>${content}</li>`;
+      continue;
+    }
+
+    // 빈 줄
+    if (line.trim() === '') {
+      closeUl(0);
+      inUl = false;
+      continue;
+    }
+
+    // 일반 텍스트
+    closeUl(0);
+    inUl = false;
+    const content = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html += `<p>${content}</p>`;
+  }
+
+  closeUl(0);
+  return html;
+}
+
 async function analyze() {
   const title = document.getElementById('titleInput').value.trim();
   const artist = document.getElementById('artistInput').value.trim();
@@ -559,7 +719,7 @@ async function analyze() {
     document.getElementById('sunoText').textContent = data.suno_prompt || "";
     document.getElementById('styleText').textContent = data.style_keywords || "";
     document.getElementById('structureText').textContent = data.song_structure || "";
-    document.getElementById('tipsText').textContent = data.pro_tips || "";
+    document.getElementById('tipsText').innerHTML = markdownToHtml(data.pro_tips || "");
 
     switchTab('report');
     document.getElementById('result').style.display = 'block';
@@ -576,18 +736,19 @@ function renderReport(report) {
   container.innerHTML = '';
   const lines = report.split('\n');
   let currentLabel = '';
-  let currentContent = [];
+  let currentLines = [];
 
   function flush() {
     if (!currentLabel) return;
     const section = document.createElement('div');
     section.className = 'report-section';
+    const contentHtml = markdownToHtml(currentLines.join('\n'));
     section.innerHTML = `
       <div class="section-label">${currentLabel}</div>
-      <div class="section-content">${currentContent.join('\n').trim()}</div>
+      <div class="section-content">${contentHtml}</div>
     `;
     container.appendChild(section);
-    currentContent = [];
+    currentLines = [];
   }
 
   for (const line of lines) {
@@ -596,7 +757,7 @@ function renderReport(report) {
       flush();
       currentLabel = headMatch[1].replace(/[^\w\s가-힣]/g, '').trim();
     } else {
-      currentContent.push(line);
+      currentLines.push(line);
     }
   }
   flush();
