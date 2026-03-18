@@ -17,8 +17,7 @@ def chat(text: str) -> str:
             response = model.generate_content(
                 text,
                 generation_config=genai.GenerationConfig(
-                    temperature=0.2,
-                    top_p=0.8,
+                    temperature=0,
                 )
             )
             return response.text
