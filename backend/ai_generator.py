@@ -88,3 +88,32 @@ Rules:
             "structure": ["intro", "verse", "chorus", "bridge", "outro"],
             "instrument_main": ["synth", "drums"]
         }
+    def generate_analysis(song_info: dict) -> dict:
+    title = song_info.get("title", "Unknown")
+    artist = song_info.get("artist", "Unknown")
+    genre = song_info.get("genre_guess", "")
+    tempo_user = song_info.get("tempo_user", "")
+
+    # 1. 템포 오버라이드
+    tempo_override = get_tempo_override(tempo_user)
+
+    # 2. 곡 분석
+    attrs = analyze_song(title, artist, genre, tempo_override)
+
+    # 템포 강제 반영
+    if tempo_override:
+        attrs["energy"] = tempo_override["energy"]
+        attrs["bpm"] = tempo_override["bpm"]
+
+    # 3. 출력 생성
+    report = generate_report(title, artist, genre, attrs)
+    outputs = generate_all_outputs(title, artist, attrs)
+
+    return {
+        "report": report,
+        "suno_prompt": outputs.get("suno_prompt", ""),
+        "style_keywords": outputs.get("style_keywords", ""),
+        "song_structure": outputs.get("song_structure", ""),
+        "pro_tips": outputs.get("pro_tips", ""),
+    }
+    
