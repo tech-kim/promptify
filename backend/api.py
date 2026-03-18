@@ -28,6 +28,9 @@ def analyze(req: AnalyzeRequest):
             "tempo_user": req.tempo,
         }
         result = generate_analysis(song_info)
+        print(f"[DEBUG] song_info: {song_info}")
+        print(f"[DEBUG] result keys: {list(result.keys())}")
+        print(f"[DEBUG] suno_prompt preview: {result.get('suno_prompt','')[:100]}")
         return {
             "success": True,
             "title": req.title,
