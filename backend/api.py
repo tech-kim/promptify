@@ -33,7 +33,10 @@ def analyze(req: AnalyzeRequest):
             "title": req.title,
             "artist": req.artist,
             "report": result["report"],
-            "suno_prompt": result["suno_prompt"],
+            "suno_prompt": result.get("suno_prompt", ""),
+            "style_keywords": result.get("style_keywords", ""),
+            "song_structure": result.get("song_structure", ""),
+            "pro_tips": result.get("pro_tips", ""),
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

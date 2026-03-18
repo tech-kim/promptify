@@ -6,14 +6,11 @@ import google.generativeai as genai
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# Gemini 설정
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
 
 def chat(text: str) -> str:
-    """Gemini 우선, 실패시 OpenRouter fallback"""
-    # 1. Gemini 시도
     if GEMINI_API_KEY:
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
@@ -22,7 +19,6 @@ def chat(text: str) -> str:
         except Exception as e:
             print(f"Gemini 실패: {e}")
 
-    # 2. OpenRouter fallback
     from openai import OpenAI
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
@@ -31,10 +27,8 @@ def chat(text: str) -> str:
     MODELS = [
         "openrouter/auto",
         "meta-llama/llama-4-maverick:free",
-        "meta-llama/llama-4-scout:free",
         "meta-llama/llama-3.3-70b-instruct:free",
         "google/gemma-3-27b-it:free",
-        "mistralai/mistral-7b-instruct:free",
     ]
     for model in MODELS:
         try:
@@ -50,45 +44,58 @@ def chat(text: str) -> str:
     raise Exception("모든 모델이 rate limit에 걸렸습니다. 잠시 후 다시 시도해주세요.")
 
 
-def extract_song_attributes(title: str, artist: str, genre: str, tempo_hint: str = "") -> dict:
-    prompt = f"""You are a music expert with deep knowledge of Korean and international pop music.
-Analyze this specific song and return ONLY a JSON object.
+def get_tempo_override(tempo_user: str) -> dict:
+    TEMPO_MAP = {
+        "slow":      {"energy": "low",       "bpm": "70",  "feel": "slow, gentle, ballad-like"},
+        "medium":    {"energy": "medium",     "bpm": "100", "feel": "moderate, mid-tempo, flowing"},
+        "fast":      {"energy": "high",       "bpm": "130", "feel": "fast, energetic, driving"},
+        "very_fast": {"energy": "very high",  "bpm": "165", "feel": "very fast, intense, explosive"},
+    }
+    return TEMPO_MAP.get(tempo_user, {})
+
+
+def analyze_song(title: str, artist: str, genre: str, tempo_override: dict) -> dict:
+    """곡의 음악적 속성을 깊이 있게 분석"""
+    tempo_instruction = ""
+    if tempo_override:
+        tempo_instruction = f"""
+CRITICAL OVERRIDE by user:
+- BPM: approximately {tempo_override['bpm']}
+- Energy: {tempo_override['energy']}
+- Tempo feel: {tempo_override['feel']}
+Use these values. Do NOT infer BPM or energy yourself.
+"""
+
+    prompt = f"""You are a professional music producer and analyst with deep knowledge of K-pop and global music.
+Analyze this specific song in depth and return ONLY a JSON object.
 
 Song: "{title}" by {artist}
 Genre hint: {genre if genre else "unknown"}
-User tempo hint: {tempo_hint if tempo_hint else "not provided - infer from the song"}
-CRITICAL: If user tempo hint is provided, override your BPM and energy_level inference with it.
+{tempo_instruction}
 
-
-Return exactly this JSON format:
+Return exactly this JSON:
 {{
   "duration": "3:45",
-  "timbre": "soft piano, warm synth pads, gentle acoustic guitar",
-  "tempo_feel": "slow and melancholic",
-  "energy_level": "low",
-  "mood": "bittersweet, nostalgic, emotional",
-  "key_instruments": "piano, synth pad, light percussion",
-  "vocal_style": "soft female vocals, emotional delivery, harmonized chorus",
-  "tempo_bpm": "75"
+  "bpm": "96",
+  "key": "Bb Major",
+  "energy": "medium",
+  "mood": "romantic, nostalgic, sophisticated",
+  "genre_lineage": "Neo-soul, Jazz-pop, Blue-eyed soul",
+  "chord_progression": "ii-V-I, Dm7-G7-Cmaj7",
+  "key_instruments": "Rhodes electric piano, acoustic drums, fingerpicked guitar, warm bass",
+  "timbre": "warm analog, organic live band, intimate room reverb",
+  "vocal_style": "smooth male tenor, falsetto, breathy delivery",
+  "arrangement": "minimal intro building to full band, gradual layering",
+  "mix_character": "spacious, wide stereo, instruments breathe around vocals",
+  "sonic_signature": "ii-V-I jazz harmony in pop context, Rhodes piano warmth, brush drum intimacy",
+  "avoid": "harsh digital sounds, heavy compression, EDM elements"
 }}
 
-Definitions:
-- duration: ACTUAL real length of this specific song in mm:ss
-- timbre: 3 most distinctive sound textures specific to THIS song
-- tempo_feel: 3-4 words describing the rhythmic energy
-- energy_level: must be one of: "very low" / "low" / "medium" / "high" / "very high"
-- mood: 3 emotional adjectives specific to THIS song
-- key_instruments: 3-4 most prominent instruments in THIS song
-- vocal_style: vocal characteristics specific to this song
-- tempo_bpm: estimated BPM as a number string
-
-Be SPECIFIC to this exact song. Do not generalize by genre.
-If this is a ballad, say ballad. If it's slow, say slow. Do not over-energize.
-CRITICAL for K-pop girl groups: performance/stage songs with choreography are typically HIGH or VERY HIGH energy.
-If the song is known as a title track or performance number, energy_level should be "high" or "very high".
-If the song has a strong dance beat, club-ready production, or is used for stage performance, it is NOT low energy.
-Examples of HIGH energy K-pop: girl group title tracks, dance challenges, stage performance songs.
-Examples of LOW energy K-pop: ballads, slow OSTs, acoustic versions.
+Rules:
+- Be SPECIFIC to this exact song, not generic
+- chord_progression: actual chords if known, or describe the harmonic feel
+- sonic_signature: the ONE most distinctive musical characteristic of THIS song
+- avoid: what would ruin this song's character in AI generation
 """
     try:
         raw = chat(prompt)
@@ -97,122 +104,144 @@ Examples of LOW energy K-pop: ballads, slow OSTs, acoustic versions.
         end = raw.rfind("}") + 1
         if start >= 0 and end > start:
             raw = raw[start:end]
-        data = json.loads(raw)
-        return {
-            "duration": data.get("duration", ""),
-            "timbre": data.get("timbre", ""),
-            "tempo_feel": data.get("tempo_feel", ""),
-            "energy_level": data.get("energy_level", "medium"),
-            "mood": data.get("mood", ""),
-            "key_instruments": data.get("key_instruments", ""),
-            "vocal_style": data.get("vocal_style", ""),
-            "tempo_bpm": data.get("tempo_bpm", "")
-        }
+        return json.loads(raw)
     except:
-        return {
-            "duration": "", "timbre": "", "tempo_feel": "",
-            "energy_level": "medium", "mood": "",
-            "key_instruments": "", "vocal_style": "", "tempo_bpm": ""
-        }
+        return {}
 
 
-def trim_to_limit(text: str, limit: int) -> str:
-    if len(text) <= limit:
-        return text
+def generate_all_outputs(title: str, artist: str, attrs: dict) -> dict:
+    """4개 섹션 동시 생성"""
 
-    # 1. 문장 단위로 자르기 시도
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    result = ""
-    for sentence in sentences:
-        if len(result) + len(sentence) + 1 <= limit:
-            result += ("" if not result else " ") + sentence
-        else:
-            break
+    prompt = f"""You are a Suno AI prompt architect and professional music producer.
+Based on the deep musical analysis below, generate 4 outputs for Suno AI.
 
-    # 2. 문장 분리 실패 시 (문장이 너무 길면) — 세미콜론이나 쉼표 기준으로 자르기
-    if not result:
-        chunks = re.split(r'(?<=[,;])\s+', text)
-        for chunk in chunks:
-            if len(result) + len(chunk) + 1 <= limit:
-                result += ("" if not result else " ") + chunk
-            else:
-                break
+Song: "{title}" by {artist}
+Musical Analysis:
+- BPM: {attrs.get('bpm', '?')}
+- Key: {attrs.get('key', '?')}
+- Energy: {attrs.get('energy', '?')}
+- Mood: {attrs.get('mood', '?')}
+- Genre lineage: {attrs.get('genre_lineage', '?')}
+- Chord progression: {attrs.get('chord_progression', '?')}
+- Key instruments: {attrs.get('key_instruments', '?')}
+- Timbre: {attrs.get('timbre', '?')}
+- Vocal style: {attrs.get('vocal_style', '?')}
+- Arrangement: {attrs.get('arrangement', '?')}
+- Mix character: {attrs.get('mix_character', '?')}
+- Sonic signature: {attrs.get('sonic_signature', '?')}
+- Avoid: {attrs.get('avoid', '?')}
+- Duration: {attrs.get('duration', '?')}
 
-    # 3. 그래도 없으면 단어 단위로 자르되 마지막 완전한 단어까지만
-    if not result:
-        words = text[:limit].rsplit(" ", 1)
-        result = words[0]
+Generate ALL 4 outputs below. Use ONLY English. Never mention artist name or song title.
 
-    # 4. 마지막이 완전한 문장으로 끝나지 않으면 마침표 추가
-    result = result.strip()
-    if result and result[-1] not in '.!?':
-        last_end = max(result.rfind('.'), result.rfind('!'), result.rfind('?'))
-        if last_end > len(result) // 2:
-            result = result[:last_end + 1]
+---OUTPUT 1: SUNO OPTIMIZED PROMPT---
+Write a single flowing paragraph (max 900 characters).
+This goes into Suno's "Style of Music" box.
+Structure: Opening sonic hook (first 5 seconds) → overall mood → chord/harmony → key instruments → vocal style → arrangement arc → mix texture → what to avoid.
+Make it read like a professional producer briefing. Dense with musical information.
+Every sentence must be complete. No truncation.
 
-    return result.strip()
+---OUTPUT 2: STYLE KEYWORDS---
+Max 120 characters. Comma-separated keywords only.
+Priority order: genre, sub-genre, key instruments, mood, tempo, production style, vocal type.
+Example format: Neo-soul, Jazz-pop, Rhodes piano, warm analog, mid-tempo, 96 BPM, male tenor vocals
 
+---OUTPUT 3: SONG STRUCTURE---
+Meta-tag based structure for Suno's lyrics box.
+Use tags like [Intro], [Verse], [Pre-Chorus], [Chorus], [Bridge], [Instrumental Break], [Outro].
+Under each tag, write a brief English description of what instruments/vocals/mood should dominate that section.
+Base the structure on the arrangement analysis above.
 
-def generate_suno_prompt(title: str, artist: str, attrs: dict) -> str:
-    timbre = attrs.get("timbre", "")
-    key_instruments = attrs.get("key_instruments", "")
-    tempo_feel = attrs.get("tempo_feel", "")
-    energy_level = attrs.get("energy_level", "medium")
-    mood = attrs.get("mood", "")
-    vocal_style = attrs.get("vocal_style", "")
-    tempo_bpm = attrs.get("tempo_bpm", "")
-    duration = attrs.get("duration", "")
-
-    dur_text = ""
-    if duration:
-        parts = duration.split(":")
-        if len(parts) == 2:
-            dur_text = f"a {parts[0]} minute {parts[1]} second track"
-
-    prompt = f"""Write a Suno AI music generation prompt based on these EXACT song attributes.
-You must faithfully reflect the energy and mood - do not make it more energetic than specified.
-
-Song attributes:
-- Energy level: {energy_level} (CRITICAL: reflect this accurately)
-- Mood: {mood}
-- Tempo feel: {tempo_feel}
-- Estimated BPM: {tempo_bpm}
-- Timbre: {timbre}
-- Key instruments: {key_instruments}
-- Vocal style: {vocal_style}
-- Length: {dur_text}
-
-Strict rules:
-1. Write ONE complete paragraph only
-2. Write between 500-600 characters. Do not exceed 600 characters.
-3. Never mention any artist name or song title
-4. Start with a COMPLETE sentence describing the opening 5 seconds
-5. Follow this exact order: opening hook → overall mood → instruments → harmony → vocals → structure → mix → what to avoid
-6. Energy level "{energy_level}" must be clearly reflected throughout
-7. If energy is low/very low: use words like gentle, soft, subtle, delicate
-8. If energy is high/very high: use words like driving, powerful, explosive, intense
-9. No tags or brackets - natural flowing prose only
-10. Every sentence must be grammatically complete
-
-Output the prompt text only. Nothing else.
-IMPORTANT: Never start a word mid-way. Every word must be complete. If you are near the character limit, finish the current sentence and stop.
-BANNED WORDS: Never use the word "powerful" or "empowering" - replace with "intense", "commanding", "forceful", "strong", or "bold" instead."""
+---OUTPUT 4: PRO TIPS---
+3-5 bullet points. Each tip should be specific to THIS song's sonic character.
+Focus on: key Suno trigger words, how to achieve the sonic signature, common mistakes to avoid.
+"""
 
     raw = chat(prompt)
-    raw = raw.strip().replace("```", "")
-    raw = trim_to_limit(raw, 600)
 
-    # 잘린 단어 감지 - 문장이 완전하지 않으면 마지막 완전한 문장까지만 사용
-    if raw and not raw[-1] in '.!?':
-        last_sentence_end = max(raw.rfind('.'), raw.rfind('!'), raw.rfind('?'))
-        if last_sentence_end > 0:
-            raw = raw[:last_sentence_end + 1]
+    # 4개 섹션 파싱
+    result = {
+        "suno_prompt": "",
+        "style_keywords": "",
+        "song_structure": "",
+        "pro_tips": ""
+    }
 
+    sections = {
+        "suno_prompt": "OUTPUT 1: SUNO OPTIMIZED PROMPT",
+        "style_keywords": "OUTPUT 2: STYLE KEYWORDS",
+        "song_structure": "OUTPUT 3: SONG STRUCTURE",
+        "pro_tips": "OUTPUT 4: PRO TIPS"
+    }
+
+    for key, marker in sections.items():
+        if marker in raw:
+            start = raw.find(marker) + len(marker)
+            # 다음 OUTPUT 마커 찾기
+            next_markers = [m for m in sections.values() if m != marker and m in raw]
+            end = len(raw)
+            for nm in next_markers:
+                pos = raw.find(nm, start)
+                if pos > start:
+                    end = min(end, pos)
+            content = raw[start:end].strip()
+            content = content.replace("---", "").strip()
+            result[key] = content
+
+    # suno_prompt 글자수 보장
+    if len(result["suno_prompt"]) > 950:
+        sentences = re.split(r'(?<=[.!?])\s+', result["suno_prompt"])
+        trimmed = ""
+        for s in sentences:
+            if len(trimmed) + len(s) + 1 <= 950:
+                trimmed += ("" if not trimmed else " ") + s
+            else:
+                break
+        result["suno_prompt"] = trimmed
+
+    # 아티스트명/곡명 필터링
     for word in [title, artist]:
         if word and word.lower() != "unknown":
-            raw = raw.replace(word, "").replace(word.lower(), "")
+            for key in result:
+                result[key] = result[key].replace(word, "").replace(word.lower(), "")
 
-    return raw.strip()
+    return result
+
+
+def generate_report(title: str, artist: str, genre: str, attrs: dict) -> str:
+    """프로듀서 시점 한국어 리포트"""
+    prompt = f"""당신은 전문 A&R 애널리스트이자 음악 프로듀서입니다.
+아래 곡을 프로듀서 시점에서 깊이 있게 분석해주세요.
+
+곡 정보:
+- 제목: {title}
+- 아티스트: {artist}
+- 장르: {genre if genre else "알 수 없음"}
+- BPM: {attrs.get('bpm', '?')}
+- 조성: {attrs.get('key', '?')}
+- 화성 진행: {attrs.get('chord_progression', '?')}
+- 핵심 악기: {attrs.get('key_instruments', '?')}
+- 음색: {attrs.get('timbre', '?')}
+- 편곡 구조: {attrs.get('arrangement', '?')}
+
+아래 형식으로 한국어 리포트를 작성하세요:
+
+## 🎵 장르 계보
+(이 곡의 장르적 뿌리와 영향받은 아티스트/시대를 구체적으로)
+
+## 🎹 화성 & 사운드 분석
+(코드 진행, 조성, 핵심 악기의 톤과 역할을 프로듀서 시점에서 구체적으로)
+
+## 🎚️ 편곡 & 믹스 특성
+(곡의 구조적 흐름, 악기 배치, 믹싱 특성을 구체적으로)
+
+## ⚡ 이 곡의 소닉 시그니처
+(다른 곡과 절대적으로 구별되는 핵심 사운드 요소 한 가지를 구체적으로)
+
+## 💡 AI 재현 핵심 포인트
+(Suno로 이 곡과 유사한 결과를 얻기 위한 실용적 팁 3가지)"""
+
+    return chat(prompt)
 
 
 def generate_analysis(song_info: dict) -> dict:
@@ -221,61 +250,25 @@ def generate_analysis(song_info: dict) -> dict:
     genre = song_info.get("genre_guess", "")
     tempo_user = song_info.get("tempo_user", "")
 
-    TEMPO_MAP = {
-        "slow": "60-80 BPM, LOW energy, slow ballad-like feel. Use: gentle, soft, subtle, delicate.",
-        "medium": "90-110 BPM, MEDIUM energy, moderate mid-tempo feel. Use: flowing, moderate, steady.",
-        "fast": "120-140 BPM, HIGH energy, fast energetic dance feel. Use: driving, upbeat, energetic, vibrant.",
-        "very_fast": "150-180 BPM, VERY HIGH energy, intense feel. Use: explosive, intense, commanding, forceful.",
-    }
-    tempo_hint = TEMPO_MAP.get(tempo_user, "")
+    # 1. 템포 오버라이드
+    tempo_override = get_tempo_override(tempo_user)
 
-    # 1. 곡 속성 추론
-    attrs = extract_song_attributes(title, artist, genre, tempo_hint)
+    # 2. 곡 속성 깊이 분석
+    attrs = analyze_song(title, artist, genre, tempo_override)
 
-    # 사용자 템포 선택이 있으면 energy_level과 tempo_bpm 강제 덮어쓰기
-    TEMPO_ENERGY_MAP = {
-        "slow": ("low", "70"),
-        "medium": ("medium", "100"),
-        "fast": ("high", "130"),
-        "very_fast": ("very high", "165"),
-    }
-    if tempo_user and tempo_user in TEMPO_ENERGY_MAP:
-        forced_energy, forced_bpm = TEMPO_ENERGY_MAP[tempo_user]
-        attrs["energy_level"] = forced_energy
-        attrs["tempo_bpm"] = forced_bpm
-        attrs["tempo_feel"] = TEMPO_MAP[tempo_user]
+    # 템포 강제 반영
+    if tempo_override:
+        attrs["energy"] = tempo_override["energy"]
+        attrs["bpm"] = tempo_override["bpm"]
 
-    # 2. 리포트 생성
-    report_prompt = f"""당신은 전문 A&R 애널리스트입니다. 아래 곡을 분석해주세요.
-
-곡 정보:
-- 제목: {title}
-- 아티스트: {artist}
-- 장르 추정: {genre if genre else "알 수 없음"}
-
-아래 형식으로 한국어 분석 리포트를 작성해주세요:
-
-## 🎙️ 이 곡의 정체
-(이 곡이 어떤 장르적 맥락에서 나왔는지, 한 문단으로 간결하게)
-
-## ⚡ 왜 귀에 꽂히는가
-(청자를 사로잡는 핵심 요소 3가지를 번호 없이, 각각 한 줄씩 핵심만)
-
-## 🧬 이 곡의 DNA
-(다른 곡과 구별되는 고유한 음악적 특성을 구체적으로)
-
-## 👥 누가 이 곡을 찾는가
-(타겟 청취자를 구체적인 상황과 감정으로 묘사)
-
-## 💡 AI 작곡가를 위한 인사이트
-(이 곡의 성공 요소를 AI 음악 제작에 활용하는 실용적 팁 2가지)"""
-
-    report = chat(report_prompt)
-
-    # 3. Suno 프롬프트 별도 생성
-    suno_prompt = generate_suno_prompt(title, artist, attrs)
+    # 3. 리포트 + Suno 4개 출력 동시 생성
+    report = generate_report(title, artist, genre, attrs)
+    outputs = generate_all_outputs(title, artist, attrs)
 
     return {
         "report": report,
-        "suno_prompt": suno_prompt
+        "suno_prompt": outputs.get("suno_prompt", ""),
+        "style_keywords": outputs.get("style_keywords", ""),
+        "song_structure": outputs.get("song_structure", ""),
+        "pro_tips": outputs.get("pro_tips", ""),
     }
