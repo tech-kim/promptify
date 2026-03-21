@@ -150,7 +150,7 @@
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
   }
-  input::placeholder { color: var(--muted); font-size: 14px; }
+  input::placeholder { color: var(--muted); font-size: 13px; }
   .tempo-selector {
     display: flex;
     gap: 8px;
@@ -176,6 +176,19 @@
     background: rgba(108,99,255,0.15);
     border-color: var(--accent);
     color: var(--accent);
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+  .optional-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    font-family: 'Syne', sans-serif;
+    text-transform: uppercase;
+    margin-bottom: 12px;
   }
   .analyze-btn {
     width: 100%;
@@ -284,26 +297,15 @@
     text-transform: uppercase;
     margin-bottom: 12px;
   }
-
-  /* 마크다운 렌더링 스타일 */
   .section-content {
     font-size: 14px;
     line-height: 1.8;
     color: #c8c8e0;
   }
-  .section-content p {
-    margin-bottom: 12px;
-  }
+  .section-content p { margin-bottom: 12px; }
   .section-content p:last-child { margin-bottom: 0; }
-  .section-content strong {
-    color: var(--text);
-    font-weight: 600;
-  }
-  .section-content ul {
-    list-style: none;
-    padding: 0;
-    margin: 8px 0;
-  }
+  .section-content strong { color: var(--text); font-weight: 600; }
+  .section-content ul { list-style: none; padding: 0; margin: 8px 0; }
   .section-content ul li {
     padding: 6px 0 6px 16px;
     position: relative;
@@ -318,13 +320,8 @@
     font-size: 11px;
     top: 8px;
   }
-  .section-content ul ul {
-    margin: 4px 0 4px 16px;
-  }
-  .section-content ul ul li::before {
-    content: '·';
-    color: var(--muted);
-  }
+  .section-content ul ul { margin: 4px 0 4px 16px; }
+  .section-content ul ul li::before { content: '·'; color: var(--muted); }
   .section-content h3 {
     font-size: 13px;
     font-weight: 700;
@@ -332,7 +329,6 @@
     margin: 14px 0 6px;
     font-family: 'Syne', sans-serif;
   }
-
   .suno-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -347,8 +343,6 @@
     white-space: pre-wrap;
     margin-bottom: 16px;
   }
-
-  /* Pro Tips 렌더링 스타일 */
   .tips-content {
     font-size: 14px;
     line-height: 1.8;
@@ -378,14 +372,8 @@
     top: 14px;
     font-size: 14px;
   }
-  .tips-content strong {
-    color: var(--text);
-    font-weight: 600;
-  }
-  .tips-content p {
-    margin-bottom: 8px;
-  }
-
+  .tips-content strong { color: var(--text); font-weight: 600; }
+  .tips-content p { margin-bottom: 8px; }
   .action-row { display: flex; gap: 8px; }
   .btn-secondary {
     flex: 1;
@@ -480,6 +468,7 @@
   </div>
 
   <div class="input-card">
+    <!-- 필수 입력 -->
     <div class="input-row">
       <div class="input-group">
         <label>곡 제목</label>
@@ -490,12 +479,27 @@
         <input type="text" id="artistInput" placeholder="예: VIVIZ" />
       </div>
     </div>
+
+    <!-- 선택 입력 구분선 -->
+    <hr class="divider">
+    <div class="optional-label">선택 입력 — 알고 있으면 더 정확해져요</div>
+
     <div class="input-row">
-      <div class="input-group full">
+      <div class="input-group">
         <label>장르 (선택)</label>
-        <input type="text" id="genreInput" placeholder="예: K-Pop, EDM, R&B ..." />
+        <input type="text" id="genreInput" placeholder="예: K-Pop, Trap EDM" />
+      </div>
+      <div class="input-group">
+        <label>조성 (선택)</label>
+        <input type="text" id="keyInput" placeholder="예: G Minor, C Major" />
       </div>
     </div>
+
+    <div class="input-group" style="margin-bottom: 12px;">
+      <label>분위기 (선택)</label>
+      <input type="text" id="moodInput" placeholder="예: dark, aggressive, romantic, melancholic" />
+    </div>
+
     <div class="input-group" style="margin-bottom: 12px;">
       <label>템포 느낌 (선택)</label>
       <div class="tempo-selector">
@@ -505,6 +509,7 @@
         <button class="tempo-btn" onclick="selectTempo(this, 'very_fast')">⚡ 매우 빠름</button>
       </div>
     </div>
+
     <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">▶ 분석 시작</button>
     <div id="error" class="error"></div>
   </div>
@@ -529,12 +534,10 @@
       <div class="tab" onclick="switchTab('tips')">💡 Pro Tips</div>
     </div>
 
-    <!-- 리포트 -->
     <div id="reportContent">
       <div class="report-card" id="reportSections"></div>
     </div>
 
-    <!-- Suno 최적화 프롬프트 -->
     <div id="sunoContent" style="display:none">
       <div class="suno-card">
         <div class="section-label">Suno Style of Music 박스에 붙여넣기</div>
@@ -546,7 +549,6 @@
       </div>
     </div>
 
-    <!-- 스타일 키워드 -->
     <div id="styleContent" style="display:none">
       <div class="suno-card">
         <div class="section-label">Style of Music 박스 — 키워드 버전 (120자 이내)</div>
@@ -558,7 +560,6 @@
       </div>
     </div>
 
-    <!-- 곡 구조 -->
     <div id="structureContent" style="display:none">
       <div class="suno-card">
         <div class="section-label">가사 입력창에 붙여넣기 — 메타태그 구조</div>
@@ -569,7 +570,6 @@
       </div>
     </div>
 
-    <!-- Pro Tips -->
     <div id="tipsContent" style="display:none">
       <div class="suno-card">
         <div class="section-label">이 곡 재현을 위한 Pro Tips</div>
@@ -613,12 +613,10 @@ function switchTab(tab) {
   document.getElementById(selected.content).style.display = 'block';
 }
 
-// 마크다운 → HTML 변환 함수
 function markdownToHtml(text) {
   if (!text) return '';
   const lines = text.split('\n');
   let html = '';
-  let inUl = false;
   let ulDepth = 0;
 
   function closeUl(targetDepth) {
@@ -631,58 +629,46 @@ function markdownToHtml(text) {
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
 
-    // ### 소제목
     if (line.match(/^###\s+(.+)/)) {
       closeUl(0);
-      inUl = false;
       const content = line.replace(/^###\s+/, '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       html += `<h3>${content}</h3>`;
       continue;
     }
 
-    // 깊이 2 리스트 (들여쓰기 4칸 또는 탭)
     const deepListMatch = line.match(/^(?:    |\t)\*\s+(.+)/);
     if (deepListMatch) {
-      if (ulDepth < 2) {
-        if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; }
-        html += '<ul>'; ulDepth = 2;
-        inUl = true;
-      }
+      if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; }
+      if (ulDepth < 2) { html += '<ul>'; ulDepth = 2; }
       const content = deepListMatch[1].replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       html += `<li>${content}</li>`;
       continue;
     }
 
-    // 깊이 1 리스트
     const listMatch = line.match(/^\*\s+(.+)/);
     if (listMatch) {
       if (ulDepth > 1) closeUl(1);
-      if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; inUl = true; }
+      if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; }
       const content = listMatch[1].replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       html += `<li>${content}</li>`;
       continue;
     }
 
-    // 숫자 리스트 (1. 2. 3.)
     const numListMatch = line.match(/^\d+\.\s+(.+)/);
     if (numListMatch) {
       if (ulDepth > 1) closeUl(1);
-      if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; inUl = true; }
+      if (ulDepth < 1) { html += '<ul>'; ulDepth = 1; }
       const content = numListMatch[1].replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
       html += `<li>${content}</li>`;
       continue;
     }
 
-    // 빈 줄
     if (line.trim() === '') {
       closeUl(0);
-      inUl = false;
       continue;
     }
 
-    // 일반 텍스트
     closeUl(0);
-    inUl = false;
     const content = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html += `<p>${content}</p>`;
   }
@@ -695,6 +681,8 @@ async function analyze() {
   const title = document.getElementById('titleInput').value.trim();
   const artist = document.getElementById('artistInput').value.trim();
   const genre = document.getElementById('genreInput').value.trim();
+  const key = document.getElementById('keyInput').value.trim();
+  const mood = document.getElementById('moodInput').value.trim();
 
   if (!title) { showError("곡 제목을 입력해주세요."); return; }
 
@@ -707,7 +695,7 @@ async function analyze() {
     const res = await fetch(`${API_BASE}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, artist, genre, tempo: selectedTempo })
+      body: JSON.stringify({ title, artist, genre, tempo: selectedTempo, key, mood })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || '분석 실패');
